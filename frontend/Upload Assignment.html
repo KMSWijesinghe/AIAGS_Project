@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Assignment</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Shared Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Upload Assignment</h1>
+
+            <div class="content-card">
+                <!-- ASSIGNMENT DROPDOWN -->
+                <div class="form-group">
+                    <label class="form-label">Assignment:</label>
+
+                    <div class="dropdown-container">
+                        <button class="dropdown-button" id="assignmentDropdown">
+                            <span id="assignmentText">Select Assignment</span>
+                            <span>▼</span>
+                        </button>
+
+                        <div class="dropdown-menu" id="assignmentMenu">
+                            <div class="dropdown-item" onclick="selectAssignment('Assignment 1')">Assignment 1</div>
+                            <div class="dropdown-item" onclick="selectAssignment('Assignment 2')">Assignment 2</div>
+                            <div class="dropdown-item" onclick="selectAssignment('Assignment 3')">Assignment 3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ATTACHMENT CONTROLS -->
+                <div class="form-group">
+                    <label class="form-label">Attachments:</label>
+
+                    <div class="attachment-controls">
+                        <div class="dropdown-container">
+                            <button class="dropdown-button" id="attachmentDropdown">
+                                <span id="attachmentText">Select Attachment</span>
+                                <span>▼</span>
+                            </button>
+
+                            <div class="dropdown-menu" id="attachmentMenu">
+                                <div class="dropdown-item" onclick="selectAttachment('Attendance')">Attendance</div>
+                                <div class="dropdown-item" onclick="selectAttachment('Report')">Report</div>
+                                <div class="dropdown-item" onclick="selectAttachment('Assignment')">Assignment</div>
+                            </div>
+                        </div>
+
+                        <button class="browse-button">Browse File</button>
+                        <button class="add-button" onclick="addAttachment()">+ ADD</button>
+                    </div>
+                </div>
+
+                <!-- ATTACHMENTS TABLE -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-header-cell">ATTACHMENT CATEGORY</div>
+                        <div class="table-header-cell">FILE</div>
+                    </div>
+
+                    <div id="tableBody">
+                        <div class="table-row">
+                            <div class="table-cell">Attendance</div>
+                            <div class="table-cell file-link">eluno-attachments-odo.pdf</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- content-card -->
+        </div><!-- main-content -->
+    </div><!-- container -->
+
+    <script>
+        // Load the shared sidebar
+        fetch("sidebar1.html")
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById("sidebar-container").innerHTML = html;
+
+                // highlight the menu item in sidebar
+                const currentLink =
+                    document.querySelector('.nav-link[data-page="studenthome"]') ||
+                    document.querySelector('.nav-button[data-page="studenthome"]');
+
+                if (currentLink) currentLink.classList.add("active");
+            })
+            .catch(err => console.error("Sidebar load error: ", err));
+
+        // -------------------------------
+        // Dropdown Logic
+        // -------------------------------
+        let selectedAttachmentCategory = "";
+
+        // Assignment dropdown toggle
+        document.getElementById("assignmentDropdown")
+            .addEventListener("click", () => {
+                document.getElementById("assignmentMenu").classList.toggle("show");
+                document.getElementById("attachmentMenu").classList.remove("show");
+            });
+
+        // Attachment dropdown toggle
+        document.getElementById("attachmentDropdown")
+            .addEventListener("click", () => {
+                document.getElementById("attachmentMenu").classList.toggle("show");
+                document.getElementById("assignmentMenu").classList.remove("show");
+            });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener("click", event => {
+            if (!event.target.closest(".dropdown-container")) {
+                document.getElementById("assignmentMenu").classList.remove("show");
+                document.getElementById("attachmentMenu").classList.remove("show");
+            }
+        });
+
+        // Select assignment
+        function selectAssignment(name) {
+            document.getElementById("assignmentText").textContent = name;
+            document.getElementById("assignmentMenu").classList.remove("show");
+        }
+
+        // Select attachment category
+        function selectAttachment(category) {
+            selectedAttachmentCategory = category;
+            document.getElementById("attachmentText").textContent = category;
+            document.getElementById("attachmentMenu").classList.remove("show");
+        }
+
+        // Add new attachment row
+        function addAttachment() {
+            if (!selectedAttachmentCategory) return;
+
+            const tableBody = document.getElementById("tableBody");
+            const newRow = document.createElement("div");
+            newRow.classList = "table-row";
+            newRow.innerHTML = `
+                <div class="table-cell">${selectedAttachmentCategory}</div>
+                <div class="table-cell file-link">new-file.pdf</div>
+            `;
+
+            tableBody.appendChild(newRow);
+
+            selectedAttachmentCategory = "";
+            document.getElementById("attachmentText").textContent = "Select Attachment";
+        }
+    </script>
+</body>
+</html>

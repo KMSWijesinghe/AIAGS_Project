@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Portfolio List</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">View Portfolio</h1>
+
+            <div class="content-card">
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Select:</span>
+                        <select class="filter-select" id="selectBatch">
+                            <option value="">Select Batch</option>
+                            <option value="2024">Batch 2024</option>
+                            <option value="2023">Batch 2023</option>
+                            <option value="2022">Batch 2022</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Filter:</span>
+                        <span class="filter-label">Status</span>
+                        <select class="filter-select" id="filterStatus">
+                            <option value="">Select Status</option>
+                            <option value="approved">Approved</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Grade</span>
+                        <select class="filter-select" id="filterGrade">
+                            <option value="">Select Grade</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+
+                     <div class="filter-group">
+                        <span class="filter-label">Assignment</span>
+                        <select class="filter-select" id="filterGrade">
+                            <option value="">Select Assignment</option>
+                            <option value="assignment1">Assignment 1</option>
+                            <option value="assignment2">Assignment 2</option>
+                            <option value="assignment3">Assignment 3</option>
+                            <option value="assignment4">Assignment 4</option>
+                        </select>
+                    </div>
+
+                    <div class="search-group">
+                        <span class="filter-label">Search Student:</span>
+                        <input type="text" class="search-input" id="searchStudent" placeholder="">
+                    </div>
+
+                    <button class="print-button" onclick="window.print()">🖨</button>
+                </div>
+
+                <div class="table-container portfolio-table">
+                    <div class="table-header">
+                        <div class="table-header-cell">STUDENT NO</div>
+                        <div class="table-header-cell">PORTFOLIO</div>
+                        <div class="table-header-cell">STATUS</div>
+                        <div class="table-header-cell">FINAL GRADE</div>
+                        <div class="table-header-cell">VIEW REPORT</div>
+                    </div>
+                    <div class="table-body" id="tableBody">
+                        <div class="table-row">
+                            <div class="table-cell">ME/2020/001</div>
+                            <div class="table-cell">username_251120</div>
+                            <div class="table-cell status-approved">Approved</div>
+                            <div class="table-cell">B</div>
+                            <div class="table-cell">
+                                <span class="view-icon">📄</span>
+                            </div>
+                        </div>
+                        <div class="table-row">
+                            <div class="table-cell">ME/2020/002</div>
+                            <div class="table-cell">username_251120</div>
+                            <div class="table-cell status-pending">Pending</div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                        <div class="table-row empty-row">
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                        <div class="table-row empty-row">
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                        <div class="table-row empty-row">
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load shared sidebar
+        fetch("sidebar.html")
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("sidebar-container").innerHTML = html;
+
+                // mark current page in sidebar
+                // Use .nav-link or .nav-button depending on sidebar.html
+                const currentLink =
+                    document.querySelector('.nav-link[data-page="portfolio"]') ||
+                    document.querySelector('.nav-button[data-page="portfolio"]');
+                if (currentLink) {
+                    currentLink.classList.add("active");
+                }
+            })
+            .catch(error => {
+                console.error("Failed to load sidebar:", error);
+            });
+
+        // Filter functionality
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        document.getElementById('filterGrade').addEventListener('change', filterTable);
+        document.getElementById('searchStudent').addEventListener('input', filterTable);
+
+        function filterTable() {
+            const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
+            const gradeFilter = document.getElementById('filterGrade').value;
+            const searchText = document.getElementById('searchStudent').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('.table-row:not(.empty-row)');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.table-cell');
+                const studentNo = cells[0].textContent.toLowerCase();
+                const status = cells[2].textContent.toLowerCase();
+                const grade = cells[3].textContent;
+                
+                let showRow = true;
+                
+                if (statusFilter && !status.includes(statusFilter)) {
+                    showRow = false;
+                }
+                
+                if (gradeFilter && grade !== gradeFilter) {
+                    showRow = false;
+                }
+                
+                if (searchText && !studentNo.includes(searchText)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? 'grid' : 'none';
+            });
+        }
+
+        // View report functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-icon')) {
+                alert('View report functionality');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Professionalism Index System - Faculty of Medicine Login Portal">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../images/icons/logo2.png"/>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <title>Login - Professionalism Index System</title>
+    
+    <style>
+        :root {
+            --primary-color: #144573;
+            --primary-light: #1e4a9c;
+            --primary-dark: #0e294d;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fb;
+            --white: #ffffff;
+            --border-color: #e1e5e9;
+            --text-dark: #2c3e50;
+            --text-muted: #6c757d;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 15px rgba(0,0,0,0.15);
+            --shadow-xl: 0 12px 25px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #66d0ea 0%, #105a7c 100%);
+            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        .login-card {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .login-brand {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .brand-logo {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .brand-logo img {
+            max-width: 90px;
+            max-height: 90px;
+           /*  filter: brightness(0) invert(1); */
+        }
+
+        .brand-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+
+        .brand-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .brand-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .brand-features i {
+            margin-right: 0.75rem;
+            width: 16px;
+        }
+
+        .login-form-container {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            color: var(--text-dark);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(115, 20, 85, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            z-index: 2;
+        }
+
+        .form-group.has-error .form-control {
+            border-color: var(--danger-color);
+            background-color: rgba(231, 76, 60, 0.05);
+        }
+
+        .help-block {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            min-height: 1.2rem;
+        }
+
+        .text-danger {
+            color: var(--danger-color);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .header-minimal {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-logo img {
+            height: 40px;
+            margin-right: 0.75rem;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .footer-minimal {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .footer-content p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-content strong {
+            color: var(--primary-color);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-card {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 1rem;
+            }
+            
+            .login-brand {
+                padding: 2rem;
+                text-align: center;
+            }
+            
+            .brand-title {
+                font-size: 1.5rem;
+            }
+            
+            .login-form-container {
+                padding: 2rem;
+            }
+            
+            .form-header h2 {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                margin: 0.5rem;
+            }
+            
+            .login-form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header-minimal">
+        <div class="header-content">
+            <div class="header-logo">
+                <img src="../images/logo.png" alt="University Logo" />
+                <h1 class="header-title">AI Assignment Grading System</h1>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Main Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Branding Side -->
+            <div class="login-brand">
+              <div class="brand-logo">
+                     <!--  <i class="fas  fa-2x"> -->
+                        <img src="../images/logo.png" alt="Logo" />
+                    <!-- </i>-->
+                </div> 
+                <h2 class="brand-title">Faculty of Medicine</h2>
+                <p class="brand-subtitle">University of Kelaniya<br>Professional Standards Portal</p>
+               
+            </div>
+
+            <!-- Login Form -->
+            <div class="login-form-container">
+                <div class="form-header">
+                    <h2>Welcome Back</h2>
+                    <p>Please sign in to access the system</p>
+                </div>
+
+  
+                <form action="" method="post">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" 
+                                   id="username"
+                                   name="username" 
+                                   class="form-control" 
+                                   placeholder="Enter your username"
+                                   value=""
+                                   autocomplete="username">
+                        </div>
+                        <span class="help-block text-danger"><?php echo $username_err; ?></span>
+                    </div>    
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" 
+                                   id="password"
+                                   name="password" 
+                                   class="form-control"
+                                   placeholder="Enter your password"
+                                   autocomplete="current-password">
+                        </div>
+                        
+                    </div>
+
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="submit" class="login-btn w-100">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-minimal">
+        <div class="footer-content">
+            <p>© <?php echo date("Y"); ?> <strong>Faculty of Medicine, University of Kelaniya, Sri Lanka.</strong> All Rights Reserved.</p>
+        </div>
+    </div>
+
+    
+<script type="module">
+  import { api, setToken } from "../js/aigs-api.js";
+
+  const form = document.querySelector("form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    try {
+      const { token, user } = await api.auth.login(email, password);
+      setToken(token);
+      if (user.role === "student") {
+        window.location.href = "../home_student.html";
+      } else {
+        window.location.href = "../add_assignments.html";
+      }
+    } catch (err) {
+      alert(err.message || "Login failed");
+    }
+  });
+</script>
+</body>
+</html>

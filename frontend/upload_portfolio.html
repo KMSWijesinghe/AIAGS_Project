@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Portfolio</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Upload Portfolio</h1>
+
+            <div class="content-card">
+                <div class="form-row two-col">
+                    <label class="form-label">Course:</label>
+                    <select class="form-select" id="course">
+                        <option value="">Select Course</option>
+                    </select>
+
+                    <label class="form-label">Batch:</label>
+                    <select class="form-select" id="batch">
+                        <option value="">Select Batch</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Assignment:</label>
+                    <select class="form-select" id="assignment">
+                        <option value="">Select Assignment</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Upload:</label>
+                    <button class="browse-button" onclick="document.getElementById('fileInput').click()">Browse
+                        File</button>
+                    <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)">
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-header-cell">STUDENT NUMBER</div>
+                        <div class="table-header-cell">UPLOAD STATUS</div>
+                        <div class="table-header-cell">VIEW SUBMISSION</div>
+                    </div>
+
+                    <div id="tableBody"></div>
+                </div>
+
+                <button class="add-button">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { api } from "./js/aigs-api.js";
+        window.api = api;
+
+
+        // Sidebar
+        fetch("sidebar.html")
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById("sidebar-container").innerHTML = html;
+                const currentLink = document.querySelector(".nav-link[data-page=\"portfolio\"]");
+                if (currentLink) currentLink.classList.add("active");
+            })
+            .catch(err => console.error("Failed to load sidebar:", err));
+
+        const courseSel = document.getElementById("course");
+        const batchSel = document.getElementById("batch");
+        const assignmentSel = document.getElementById("assignment");
+        const tableBody = document.getElementById("tableBody");
+
+        let selectedFile = null;
+        window.handleFileUpload = function (e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) alert("File selected: " + selectedFile.name);
+        };
+
+        function resetAssignments() {
+            assignmentSel.innerHTML = `<option value="">Select Assignment</option>`;
+        }
+
+        function resetBatches() {
+            batchSel.innerHTML = `<option value="">Select Batch</option>`;
+        }
+
+        function clearTable() {
+            tableBody.innerHTML = "";
+        }
+
+        async function loadCourses() {
+            const { courses } = await api.courses.list();
+            courseSel.innerHTML = `<option value="">Select Course</option>`;
+            for (const c of courses) {
+                const opt = document.createElement("option");
+                opt.value = c;
+                opt.textContent = c;
+                courseSel.appendChild(opt);
+            }
+        }
+
+        async function loadBatches() {
+            const course_name = courseSel.value;
+            resetBatches();
+            resetAssignments();
+            clearTable();
+
+            if (!course_name) return;
+
+            const { batches } = await api.batches.list({ course_name });
+            for (const b of batches) {
+                const opt = document.createElement("option");
+                opt.value = b;
+                opt.textContent = `Batch ${b}`;
+                batchSel.appendChild(opt);
+            }
+        }
+
+        async function loadAssignments() {
+            const course_name = courseSel.value;
+            const batch = batchSel.value;
+
+            resetAssignments();
+            clearTable();
+
+            if (!course_name || !batch) return;
+
+            try {
+                console.log("FILTER:", { course_name, batch });
+
+                const resp = await api.assignments.list({ course_name, batch });
+                console.log("RESP:", resp);
+
+                const assignments = resp.assignments || [];
+
+                if (assignments.length === 0) {
+                    const opt = document.createElement("option");
+                    opt.value = "";
+                    opt.textContent = "No assignments found";
+                    assignmentSel.appendChild(opt);
+                    return;
+                }
+
+                for (const a of assignments) {
+                    const opt = document.createElement("option");
+                    opt.value = a.assignment_id;
+                    opt.textContent = a.assignment_name;
+                    assignmentSel.appendChild(opt);
+                }
+            } catch (e) {
+                console.error("loadAssignments failed:", e);
+                alert("Failed to load assignments: " + e.message);
+            }
+        }
+
+        async function refreshTable() {
+            const assignment_id = assignmentSel.value;
+            clearTable();
+
+            if (!assignment_id) return;
+
+            const { portfolios } = await api.portfolios.list({ assignment_id });
+
+            if (!portfolios.length) {
+                const r = document.createElement("div");
+                r.className = "table-row empty-rows";
+                r.innerHTML = `
+        <div class="table-cell"></div>
+        <div class="table-cell">No uploads yet</div>
+        <div class="table-cell"></div>
+      `;
+                tableBody.appendChild(r);
+                return;
+            }
+
+            for (const p of portfolios) {
+                const r = document.createElement("div");
+                r.className = "table-row";
+                r.innerHTML = `
+        <div class="table-cell">${p.student_no}</div>
+        <div class="table-cell">UPLOADED ✓</div>
+        <div class="table-cell">
+          <a href="${p.portfolio_link}" target="_blank"><span class="edit-icon">👁</span></a>
+        </div>
+      `;
+                tableBody.appendChild(r);
+            }
+        }
+
+        // Events
+        courseSel.addEventListener("change", loadBatches);
+        batchSel.addEventListener("change", loadAssignments);
+        assignmentSel.addEventListener("change", refreshTable);
+
+        // Upload
+        const saveBtn = document.querySelector(".add-button");
+        saveBtn.addEventListener("click", async () => {
+            const assignment_id = Number(assignmentSel.value);
+            if (!assignment_id) return alert("Select assignment");
+            if (!selectedFile) return alert("Select a file first");
+
+            const student_no = prompt("Enter your student number (e.g., ME/2020/001):");
+            if (!student_no) return;
+
+            await api.portfolios.upload({ student_no, assignment_id, file: selectedFile });
+
+            selectedFile = null;
+            document.getElementById("fileInput").value = "";
+            await refreshTable();
+            alert("Uploaded successfully");
+        });
+
+        // Init
+        try {
+            await loadCourses();
+        } catch (e) {
+            console.error("loadCourses failed:", e);
+            alert("loadCourses failed: " + e.message);
+        }
+    </script>
+</body>
+
+</html>

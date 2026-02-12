@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add & Edit Assignment</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Add Assignment</h1>
+            <div class="content-card">
+                <div class="form-row">
+                    <label class="form-label">Department:</label>
+                    <select class="form-select" id="department">
+                        <option value="">Select Department</option>
+                        <option value="medicine">Medicine</option>
+                        <option value="surgery">Surgery</option>
+                        <option value="pediatrics">Pediatrics</option>
+                    </select>
+                </div>
+
+                <div class="form-row three-col">
+                    <label class="form-label">Course:</label>
+                    <select class="form-select" id="course">
+                        <option value="">Select Course</option>
+                        <option value="course1">Course 1</option>
+                        <option value="course2">Course 2</option>
+                        <option value="course3">Course 3</option>
+                    </select>
+                    <label class="form-label">Batch:</label>
+                    <select class="form-select" id="batch">
+                        <option value="">Select Batch</option>
+                        <option value="2024">Batch 2024</option>
+                        <option value="2023">Batch 2023</option>
+                        <option value="2022">Batch 2022</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Assignment:</label>
+                    <input type="text" class="form-input" id="assignment" placeholder="">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Remark:</label>
+                    <input type="text" class="form-input" id="remark" placeholder="">
+                </div>
+
+                <div class="form-row three-col">
+                    <label class="form-label">Start Date:</label>
+                    <input type="date" class="form-input" id="startDate">
+                    <label class="form-label">Due Date:</label>
+                    <input type="date" class="form-input" id="dueDate">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Attachments:</label>
+                    <div>
+                        <label for="attendance"><input type="checkbox" id="attendance"> Attendance</label>
+                        <label for="mandatory-attendance" style="margin-left: 100px;"><input type="checkbox" id="mandatory-attendance"> Mandatory</label><br>
+
+                        <label for="pi"><input type="checkbox" id="pi"> Professionalism Index</label>
+                        <label for="mandatory-pi" style="margin-left: 23.2px;"><input type="checkbox" id="mandatory-pi"> Mandatory</label><br>
+
+                        <label for="photos"><input type="checkbox" id="photos"> Photos</label>
+                        <label for="mandatory-photos" style="margin-left: 130px;"><input type="checkbox" id="mandatory-photos"> Mandatory</label>
+                    </div>
+                </div>
+
+                <button class="add-button" onclick="addAssignment()">ADD ASSIGNMENT</button>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-header-cell">BATCH</div>
+                        <div class="table-header-cell">ASSIGNMENT</div>
+                        <div class="table-header-cell">DESCRIPTION</div>
+                        <div class="table-header-cell">EDIT</div>
+                    </div>
+                    <div id="tableBody">
+                        <div class="table-row">
+                            <div class="table-cell">35</div>
+                            <div class="table-cell">[Assignment]</div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell">
+                                <a href="edit_assignments.html"><span class="edit-icon">📝</span></a>
+                            </div>
+                        </div>
+                        <div class="table-row empty-rows">
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+import { api } from "./js/aigs-api.js";
+
+fetch("sidebar.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("sidebar-container").innerHTML = html;
+    const currentLink = document.querySelector(".nav-link[data-page=\"assignments\"]");
+    if (currentLink) currentLink.classList.add("active");
+  })
+  .catch(err => console.error("Failed to load sidebar:", err));
+
+async function refreshAssignments() {
+  try {
+    const { assignments } = await api.assignments.list();
+    const tableBody = document.getElementById("tableBody");
+    tableBody.innerHTML = "";
+
+    if (!assignments.length) {
+      const empty = document.createElement("div");
+      empty.className = "table-row empty-rows";
+      empty.innerHTML = `<div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div>`;
+      tableBody.appendChild(empty);
+      return;
+    }
+
+    for (const a of assignments) {
+      const row = document.createElement("div");
+      row.className = "table-row";
+      row.innerHTML = `
+        <div class="table-cell">${a.batch}</div>
+        <div class="table-cell">${a.assignment_name}</div>
+        <div class="table-cell">${a.remark ? a.remark : ""}</div>
+        <div class="table-cell">
+          <a href="edit_assignments.html?id=${a.assignment_id}"><span class="edit-icon">📝</span></a>
+        </div>
+      `;
+
+      tableBody.appendChild(row);
+    }
+  } catch (e) {
+    console.error(e);
+    alert(e.message || "Failed to load assignments");
+  }
+}
+
+window.addAssignment = async function addAssignment() {
+  const department = document.getElementById("department").value;
+  const course_name = document.getElementById("course").value || "MBBS";
+  const batch = document.getElementById("batch").value;
+  const assignment_name = document.getElementById("assignment").value;
+  const remark = document.getElementById("remark").value;
+  const start_date = document.getElementById("startDate").value || null;
+  const deadline_date = document.getElementById("dueDate").value || null;
+
+  if (!batch || !assignment_name) {
+    alert("Please fill in at least Batch and Assignment fields");
+    return;
+  }
+
+  await api.assignments.create({ assignment_name, batch, course_name, department: department || null, remark: remark || null, start_date, deadline_date });
+
+  document.getElementById("assignment").value = "";
+  document.getElementById("remark").value = "";
+
+  await refreshAssignments();
+};
+
+refreshAssignments();
+</script>
+</body>
+</html>

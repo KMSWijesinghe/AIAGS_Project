@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home for Students</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .filters-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filter-dropdown {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .filter-dropdown:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .assignments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .assignments-table thead {
+            background-color: #34495e;
+            color: white;
+        }
+
+        .assignments-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .assignments-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .assignments-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-finished {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .deadline-text {
+            color: #555;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .main-action-button {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 200px;
+        }
+
+        .upload-button {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .upload-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .feedback-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .feedback-button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .results-button {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .results-button:hover {
+            background-color: #F57C00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+        }
+
+        .main-action-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Shared Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Student Home</h1>
+
+            <div class="content-card">
+                <!-- FILTER DROPDOWNS -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label class="filter-label">Department:</label>
+                        <select class="filter-dropdown" id="departmentFilter" onchange="filterTable()">
+                            <option value="">All Departments</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Surgery">Surgery</option>
+                            <option value="Pediatrics">Pediatrics</option>
+                            <option value="Psychiatry">Psychiatry</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Assignment:</label>
+                        <select class="filter-dropdown" id="assignmentFilter" onchange="filterTable()">
+                            <option value="">All Assignments</option>
+                            <option value="Assignment 1">Assignment 1</option>
+                            <option value="Assignment 2">Assignment 2</option>
+                            <option value="Assignment 3">Assignment 3</option>
+                            <option value="Assignment 4">Assignment 4</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Status:</label>
+                        <select class="filter-dropdown" id="statusFilter" onchange="filterTable()">
+                            <option value="">All Status</option>
+                            <option value="Finished">Finished</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ASSIGNMENTS TABLE -->
+                <table class="assignments-table" id="assignmentsTable">
+                    <thead>
+                        <tr>
+                            <th>ASSIGNMENT</th>
+                            <th>STATUS</th>
+                            <th>DEADLINE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr data-department="Medicine" data-assignment="Assignment 1" data-status="Pending">
+                            <td>Assignment 1 - Clinical Case Study</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="deadline-text">February 15, 2026</td>
+                        </tr>
+                        <tr data-department="Surgery" data-assignment="Assignment 2" data-status="Finished">
+                            <td>Assignment 2 - Surgical Procedures Report</td>
+                            <td><span class="status-badge status-finished">Finished</span></td>
+                            <td class="deadline-text">February 10, 2026</td>
+                        </tr>
+                        <tr data-department="Pediatrics" data-assignment="Assignment 3" data-status="Pending">
+                            <td>Assignment 3 - Pediatric Assessment</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="deadline-text">February 20, 2026</td>
+                        </tr>
+                        <tr data-department="Medicine" data-assignment="Assignment 4" data-status="Finished">
+                            <td>Assignment 4 - Research Paper</td>
+                            <td><span class="status-badge status-finished">Finished</span></td>
+                            <td class="deadline-text">February 5, 2026</td>
+                        </tr>
+                        <tr data-department="Psychiatry" data-assignment="Assignment 1" data-status="Pending">
+                            <td>Assignment 1 - Mental Health Evaluation</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="deadline-text">February 25, 2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ACTION BUTTONS -->
+                <div class="button-container">
+                    <button class="main-action-button upload-button" onclick="navigateToUpload()">
+                        Upload Assignment
+                    </button>
+
+                    <button class="main-action-button feedback-button" onclick="navigateToFeedback()">
+                        Get Feedback
+                    </button>
+
+                    <button class="main-action-button results-button" onclick="navigateToResults()">
+                        View Results
+                    </button>
+                </div>
+
+            </div><!-- content-card -->
+        </div><!-- main-content -->
+    </div><!-- container -->
+
+    <script>
+        // Load the shared sidebar
+        fetch("sidebar.html")
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById("sidebar-container").innerHTML = html;
+
+                // highlight the menu item in sidebar
+                const currentLink =
+                    document.querySelector('.nav-link[data-page="studenthome"]') ||
+                    document.querySelector('.nav-button[data-page="studenthome"]');
+
+                if (currentLink) currentLink.classList.add("active");
+            })
+            .catch(err => console.error("Sidebar load error: ", err));
+
+        // Filter table based on dropdown selections
+        function filterTable() {
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const assignmentFilter = document.getElementById('assignmentFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const rows = document.querySelectorAll('#tableBody tr');
+            
+            rows.forEach(row => {
+                const department = row.getAttribute('data-department');
+                const assignment = row.getAttribute('data-assignment');
+                const status = row.getAttribute('data-status');
+                
+                let showRow = true;
+                
+                if (departmentFilter && department !== departmentFilter) {
+                    showRow = false;
+                }
+                
+                if (assignmentFilter && assignment !== assignmentFilter) {
+                    showRow = false;
+                }
+                
+                if (statusFilter && status !== statusFilter) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        // Navigation functions
+        function navigateToUpload() {
+            window.location.href = 'Upload Assignment.html';
+        }
+
+        function navigateToFeedback() {
+            window.location.href = 'get_feedback.html';
+        }
+
+        function navigateToResults() {
+            window.location.href = 'View result.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add & Edit Assignment</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Add Rubric</h1>
+            <div class="content-card">
+                
+
+                <div class="form-row three-col">
+                    <label class="form-label">Course:</label>
+                    <select class="form-select" id="course">
+                        <option value="">Select Course</option>
+                        <option value="course1">Course 1</option>
+                        <option value="course2">Course 2</option>
+                        <option value="course3">Course 3</option>
+                    </select>
+                    <label class="form-label">Batch:</label>
+                    <select class="form-select" id="batch">
+                        <option value="">Select Batch</option>
+                        <option value="2024">Batch 2024</option>
+                        <option value="2023">Batch 2023</option>
+                        <option value="2022">Batch 2022</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Assignment:</label>
+                    <select class="form-select" id="assignment">
+                        <option value="">Select Assignment</option>
+                        <option value="assignment1">Assignment 1</option>
+                        <option value="assignment2">Assignment 2</option>
+                        <option value="assignment3">Assignment 3</option>
+                    </select>
+                </div>
+
+                
+
+                <button class="add-button" >UPLOAD RUBRIC</button>
+                <button class="add-button" >CREATE RUBRIC</button>
+
+                <div class="table-container">
+                    <div class="table-header">
+                        <div class="table-header-cell">RUBRIC</div>
+                        <div class="table-header-cell">CREATED DATE</div>
+                        <div class="table-header-cell">CREATED BY</div>
+                        <div class="table-header-cell">VIEW</div>
+                        <div class="table-header-cell">EDIT</div>
+                    </div>
+                    <div id="tableBody">
+                        <div class="table-row">
+                            <div class="table-cell">[Rubric]</div>
+                            <div class="table-cell">[Date]</div>
+                            <div class="table-cell">[Name]</div>
+                            <div class="table-cell">
+                                <a href="view_rubric.html"><span class="view-icon">🔍</span></a>
+                            </div>
+                            <div class="table-cell">
+                                <a href="edit_rubric.html"><span class="edit-icon">📝</span></a>
+                            </div>
+                        </div>
+                        <div class="table-row empty-rows">
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                            <div class="table-cell"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+import { api } from "./js/aigs-api.js";
+
+fetch("sidebar.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("sidebar-container").innerHTML = html;
+    const currentLink = document.querySelector(".nav-link[data-page=\"assignments\"]");
+    if (currentLink) currentLink.classList.add("active");
+  })
+  .catch(err => console.error("Failed to load sidebar:", err));
+
+const assignmentSelect = document.getElementById("assignment");
+const batchSelect = document.getElementById("batch");
+
+async function loadAssignments() {
+  const { assignments } = await api.assignments.list();
+  // replace options
+  assignmentSelect.innerHTML = "<option value=\"\">Select Assignment</option>";
+  for (const a of assignments) {
+    const opt = document.createElement("option");
+    opt.value = a.assignment_id;
+    opt.textContent = `${a.batch} - ${a.assignment_name} (ID: ${a.assignment_id})`;
+    assignmentSelect.appendChild(opt);
+  }
+}
+
+async function loadRubrics() {
+  const assignmentId = assignmentSelect.value;
+  if (!assignmentId) return;
+  const { rubrics } = await api.rubrics.byAssignment(assignmentId);
+  const tableBody = document.getElementById("tableBody");
+  tableBody.innerHTML = "";
+  if (!rubrics.length) {
+    const empty = document.createElement("div");
+    empty.className = "table-row empty-rows";
+    empty.innerHTML = `<div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div>`;
+    tableBody.appendChild(empty);
+    return;
+  }
+  for (const r of rubrics) {
+    const row = document.createElement("div");
+    row.className = "table-row";
+    row.innerHTML = `
+      <div class=\"table-cell\">${r.rubric_name}</div>
+      <div class=\"table-cell\">${new Date(r.create_date).toLocaleString()}</div>
+      <div class=\"table-cell\">${r.created_by ? r.created_by : ""}</div>
+      <div class=\"table-cell\"><span class=\"view-icon\" title=\"View\">🔍</span></div>
+      <div class=\"table-cell\"><span class=\"edit-icon\" title=\"Edit\">📝</span></div>
+    `;
+    row.querySelector(".view-icon").addEventListener("click", () => alert(r.rubric_text || "No rubric text"));
+    tableBody.appendChild(row);
+  }
+}
+
+// Wire up buttons
+const buttons = Array.from(document.querySelectorAll(".add-button"));
+const createBtn = buttons.find(b => b.textContent.includes("CREATE")) || buttons[1];
+
+createBtn.addEventListener("click", async () => {
+  const assignmentId = Number(assignmentSelect.value);
+  if (!assignmentId) return alert("Select an assignment");
+  const rubric_name = prompt("Rubric name:");
+  if (!rubric_name) return;
+  const rubric_text = prompt("Paste rubric text (optional):") || "";
+  await api.rubrics.create({ rubric_name, assignment_id: assignmentId, rubric_text });
+  await loadRubrics();
+});
+
+assignmentSelect.addEventListener("change", loadRubrics);
+
+await loadAssignments();
+</script>
+</body>
+</html>

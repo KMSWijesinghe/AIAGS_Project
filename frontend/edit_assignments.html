@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add & Edit Assignment</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1 class="page-title" style="text-align: center;">Edit Assignment</h1>
+            <div class="content-card">
+                <div class="form-row">
+                    <label class="form-label">Department:</label>
+                    <select class="form-select" id="department">
+                        <option value="">Select Department</option>
+                        <option value="medicine">Medicine</option>
+                        <option value="surgery">Surgery</option>
+                        <option value="pediatrics">Pediatrics</option>
+                    </select>
+                </div>
+
+                <div class="form-row three-col">
+                    <label class="form-label">Course:</label>
+                    <select class="form-select" id="course">
+                        <option value="">Select Course</option>
+                        <option value="course1">Course 1</option>
+                        <option value="course2">Course 2</option>
+                        <option value="course3">Course 3</option>
+                    </select>
+                    <label class="form-label">Batch:</label>
+                    <select class="form-select" id="batch">
+                        <option value="">Select Batch</option>
+                        <option value="2024">Batch 2024</option>
+                        <option value="2023">Batch 2023</option>
+                        <option value="2022">Batch 2022</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Assignment:</label>
+                    <input type="text" class="form-input" id="assignment" placeholder="">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Remark:</label>
+                    <input type="text" class="form-input" id="remark" placeholder="">
+                </div>
+
+                <div class="form-row three-col">
+                    <label class="form-label">Start Date:</label>
+                    <input type="date" class="form-input" id="startDate">
+                    <label class="form-label">Due Date:</label>
+                    <input type="date" class="form-input" id="dueDate">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Attachments:</label>
+                    <div>
+                        <input type="checkbox" id="attendance">
+                        <label for="attendance">Attendance</label><br>
+
+                        <input type="checkbox" id="pi">
+                        <label for="pi">Progessionalism Index</label><br>
+
+                        <input type="checkbox" id="photos">
+                        <label for="photos">Photos</label>
+                    </div>
+                </div>
+
+                <button class="add-button" >SAVE CHANGES</button>
+
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch("sidebar.html")
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("sidebar-container").innerHTML = html;
+
+            // mark current page in sidebar
+            const currentLink = document.querySelector('.nav-link[data-page="assignments"]');
+            if (currentLink) {
+            currentLink.classList.add("active");
+            }
+        })
+        .catch(error => {
+            console.error("Failed to load sidebar:", error);
+        });
+
+        function addAssignment() {
+            const department = document.getElementById('department').value;
+            const course = document.getElementById('course').value;
+            const batch = document.getElementById('batch').value;
+            const assignment = document.getElementById('assignment').value;
+            const remark = document.getElementById('remark').value;
+            const startDate = document.getElementById('startDate').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const attachments = document.getElementById('attachments').checked;
+
+            if (!batch || !assignment) {
+                alert('Please fill in at least Batch and Assignment fields');
+                return;
+            }
+
+            const tableBody = document.getElementById('tableBody');
+            
+            // Remove empty rows if they exist
+            const emptyRow = tableBody.querySelector('.empty-rows');
+            if (emptyRow) {
+                emptyRow.remove();
+            }
+
+            const newRow = document.createElement('div');
+            newRow.className = 'table-row';
+            newRow.innerHTML = `
+                <div class="table-cell">${batch}</div>
+                <div class="table-cell">${assignment}</div>
+                <div class="table-cell">${remark}</div>
+                <div class="table-cell">
+                    <span class="edit-icon">📝</span>
+                </div>
+            `;
+            tableBody.appendChild(newRow);
+
+            // Reset form
+            document.getElementById('assignment').value = '';
+            document.getElementById('remark').value = '';
+            document.getElementById('attachments').checked = false;
+        }
+    </script>
+</body>
+</html>
