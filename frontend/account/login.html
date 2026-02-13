@@ -1,22 +1,22 @@
-
 <!doctype html>
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Professionalism Index System - Faculty of Medicine Login Portal">
-    
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="../images/icons/logo2.png"/>
-    
+    <link rel="icon" type="image/png" href="../images/icons/logo2.png" />
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <title>Login - Professionalism Index System</title>
-    
+
     <style>
         :root {
             --primary-color: #144573;
@@ -31,10 +31,10 @@
             --border-color: #e1e5e9;
             --text-dark: #2c3e50;
             --text-muted: #6c757d;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-lg: 0 8px 15px rgba(0,0,0,0.15);
-            --shadow-xl: 0 12px 25px rgba(0,0,0,0.2);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 15px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 12px 25px rgba(0, 0, 0, 0.2);
         }
 
         * {
@@ -102,20 +102,20 @@
         .brand-logo {
             width: 100px;
             height: 100px;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .brand-logo img {
             max-width: 90px;
             max-height: 90px;
-           /*  filter: brightness(0) invert(1); */
+            /*  filter: brightness(0) invert(1); */
         }
 
         .brand-title {
@@ -264,7 +264,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }
 
@@ -273,7 +273,7 @@
         }
 
         .header-minimal {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 1rem 0;
             box-shadow: var(--shadow-sm);
@@ -322,7 +322,7 @@
         }
 
         .footer-minimal {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 1.5rem 0;
             text-align: center;
@@ -347,13 +347,27 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(5deg); }
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Responsive Design */
@@ -363,20 +377,20 @@
                 max-width: 400px;
                 margin: 1rem;
             }
-            
+
             .login-brand {
                 padding: 2rem;
                 text-align: center;
             }
-            
+
             .brand-title {
                 font-size: 1.5rem;
             }
-            
+
             .login-form-container {
                 padding: 2rem;
             }
-            
+
             .form-header h2 {
                 font-size: 1.75rem;
             }
@@ -386,11 +400,11 @@
             .login-container {
                 padding: 1rem;
             }
-            
+
             .login-card {
                 margin: 0.5rem;
             }
-            
+
             .login-form-container {
                 padding: 1.5rem;
             }
@@ -406,7 +420,7 @@
                 <img src="../images/logo.png" alt="University Logo" />
                 <h1 class="header-title">AI Assignment Grading System</h1>
             </div>
-            
+
         </div>
     </div>
 
@@ -415,14 +429,14 @@
         <div class="login-card">
             <!-- Branding Side -->
             <div class="login-brand">
-              <div class="brand-logo">
-                     <!--  <i class="fas  fa-2x"> -->
-                        <img src="../images/logo.png" alt="Logo" />
+                <div class="brand-logo">
+                    <!--  <i class="fas  fa-2x"> -->
+                    <img src="../images/logo.png" alt="Logo" />
                     <!-- </i>-->
-                </div> 
+                </div>
                 <h2 class="brand-title">Faculty of Medicine</h2>
                 <p class="brand-subtitle">University of Kelaniya<br>Professional Standards Portal</p>
-               
+
             </div>
 
             <!-- Login Form -->
@@ -432,35 +446,28 @@
                     <p>Please sign in to access the system</p>
                 </div>
 
-  
-                <form action="" method="post">
+
+                <form id="loginForm" novalidate>
                     <div class="form-group">
                         <label for="username">Username</label>
                         <div style="position: relative;">
                             <i class="fas fa-user input-icon"></i>
-                            <input type="text" 
-                                   id="username"
-                                   name="username" 
-                                   class="form-control" 
-                                   placeholder="Enter your username"
-                                   value=""
-                                   autocomplete="username">
+                            <input type="text" id="username" name="username" class="form-control"
+                                placeholder="Enter your username" value="" autocomplete="username">
                         </div>
-                        <span class="help-block text-danger"><?php echo $username_err; ?></span>
-                    </div>    
+                        <span class="help-block text-danger">
+                            <?php echo $username_err; ?>
+                        </span>
+                    </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
                         <div style="position: relative;">
                             <i class="fas fa-lock input-icon"></i>
-                            <input type="password" 
-                                   id="password"
-                                   name="password" 
-                                   class="form-control"
-                                   placeholder="Enter your password"
-                                   autocomplete="current-password">
+                            <input type="password" id="password" name="password" class="form-control"
+                                placeholder="Enter your password" autocomplete="current-password">
                         </div>
-                        
+
                     </div>
 
                     <div class="form-group" style="margin-top: 2rem;">
@@ -477,31 +484,42 @@
     <!-- Footer -->
     <div class="footer-minimal">
         <div class="footer-content">
-            <p>© <?php echo date("Y"); ?> <strong>Faculty of Medicine, University of Kelaniya, Sri Lanka.</strong> All Rights Reserved.</p>
+            <p>©
+                <?php echo date("Y"); ?> <strong>Faculty of Medicine, University of Kelaniya, Sri Lanka.</strong> All
+                Rights Reserved.
+            </p>
         </div>
     </div>
 
-    
-<script type="module">
-  import { api, setToken } from "../js/aigs-api.js";
 
-  const form = document.querySelector("form");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
-    try {
-      const { token, user } = await api.auth.login(email, password);
-      setToken(token);
-      if (user.role === "student") {
-        window.location.href = "../home_student.html";
-      } else {
-        window.location.href = "../add_assignments.html";
-      }
-    } catch (err) {
-      alert(err.message || "Login failed");
-    }
-  });
-</script>
+    <script type="module">
+        import { api } from "../js/aigs-api.js";
+
+        const form = document.getElementById("loginForm");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("username").value.trim(); // your field is named username but you use it as email
+            const password = document.getElementById("password").value;
+
+            try {
+                const data = await api.auth.login(email, password);
+
+                // backend returns { token, user }
+                localStorage.setItem("aigs_token", data.token);
+
+                if (data.user?.role === "student") {
+                    window.location.href = "../home_student.html";
+                } else {
+                    window.location.href = "../add_assignments.html";
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message || "Login failed");
+            }
+        });
+    </script>
 </body>
+
 </html>

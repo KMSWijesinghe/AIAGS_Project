@@ -1,31 +1,31 @@
+// js/aigs-api.js
 // Minimal API helper for AIGS frontend
 // Stores JWT in localStorage under key "aigs_token".
 
-const BASE = "";
+const BASE = ""; // keep "" if frontend and backend are on same domain
 
 async function request(path, opts = {}) {
   const token = localStorage.getItem("aigs_token");
 
-  const headers = {
-    ...(opts.headers || {}),
-  };
+  const headers = { ...(opts.headers || {}) };
 
   // Add JSON header only when body is not FormData
   if (!(opts.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
 
-  // ✅ Add auth header
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+  // Add auth header if token exists
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await fetch(BASE + path, { ...opts, headers });
 
-  // Handle non-OK
   const text = await res.text();
   let data;
-  try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
 
   if (!res.ok) {
     const msg = data?.error || data?.message || `Request failed: ${res.status}`;
@@ -35,20 +35,23 @@ async function request(path, opts = {}) {
   return data;
 }
 
-
 export const api = {
   auth: {
-    login: (email, password) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-    me: () => apiFetch('/auth/me')
+    login: (email, password) =>
+      request("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      }),
+    me: () => request("/api/auth/me"),
   },
 
   courses: {
-    list: () => request("/api/courses")
+    list: () => request("/api/courses"),
   },
 
   batches: {
     list: ({ course_name } = {}) =>
-      request(`/api/batches${course_name ? `?course_name=${encodeURIComponent(course_name)}` : ""}`)
+      request(`/api/batches${course_name ? `?course_name=${encodeURIComponent(course_name)}` : ""}`),
   },
 
   assignments: {
@@ -64,10 +67,16 @@ export const api = {
       request(`/api/assignments/${id}`, { method: "DELETE" }),
   },
 
-
   rubrics: {
-    byAssignment: (assignmentId) => apiFetch(`/rubrics/assignment/${assignmentId}`),
-    create: (payload) => apiFetch('/rubrics', { method: 'POST', body: JSON.stringify(payload) })
+    byAssignment: (assignmentId) => request(`/api/rubrics/assignment/${assignmentId}`),
+    create: (payload) =>
+      request("/api/rubrics", { method: "POST", body: JSON.stringify(payload) }),
+
+    // optional (recommended for edit page)
+    update: (rubricId, payload) =>
+      request(`/api/rubrics/${rubricId}`, { method: "PUT", body: JSON.stringify(payload) }),
+    remove: (rubricId) =>
+      request(`/api/rubrics/${rubricId}`, { method: "DELETE" }),
   },
 
   portfolios: {
@@ -83,18 +92,23 @@ export const api = {
       fd.append("assignment_id", assignment_id);
       fd.append("file", file);
 
-      // IMPORTANT: request() already avoids setting Content-Type for FormData
-      return request("/api/portfolios/upload", {
-        method: "POST",
-        body: fd,
-      });
+      return request("/api/portfolios/upload", { method: "POST", body: fd });
     },
   },
+
   grading: {
-    gradePortfolioAI: (portfolioId) => apiFetch(`/grading/portfolio/${portfolioId}/ai`, { method: 'POST' }),
-    gradeAssignmentAI: (assignmentId) => apiFetch(`/grading/assignment/${assignmentId}/ai`, { method: 'POST' }),
-    resultsByAssignment: (assignmentId) => apiFetch(`/grading/assignment/${assignmentId}/results`),
-    setFinal: (portfolioId, payload) => apiFetch(`/grading/portfolio/${portfolioId}/final`, { method: 'POST', body: JSON.stringify(payload) }),
-    publishAssignment: (assignmentId) => apiFetch(`/grading/assignment/${assignmentId}/publish`, { method: 'POST' })
-  }
+    gradePortfolioAI: (portfolioId) =>
+      request(`/api/grading/portfolio/${portfolioId}/ai`, { method: "POST" }),
+    gradeAssignmentAI: (assignmentId) =>
+      request(`/api/grading/assignment/${assignmentId}/ai`, { method: "POST" }),
+    resultsByAssignment: (assignmentId) =>
+      request(`/api/grading/assignment/${assignmentId}/results`),
+    setFinal: (portfolioId, payload) =>
+      request(`/api/grading/portfolio/${portfolioId}/final`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    publishAssignment: (assignmentId) =>
+      request(`/api/grading/assignment/${assignmentId}/publish`, { method: "POST" }),
+  },
 };

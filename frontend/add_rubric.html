@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add & Edit Assignment</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Sidebar -->
@@ -15,7 +17,7 @@
         <div class="main-content">
             <h1 class="page-title" style="text-align: center;">Add Rubric</h1>
             <div class="content-card">
-                
+
 
                 <div class="form-row three-col">
                     <label class="form-label">Course:</label>
@@ -44,10 +46,11 @@
                     </select>
                 </div>
 
-                
 
-                <button class="add-button" >UPLOAD RUBRIC</button>
-                <button class="add-button" >CREATE RUBRIC</button>
+
+                <button class="add-button" id="uploadRubricBtn">UPLOAD RUBRIC</button>
+                <button class="add-button" id="createRubricBtn">CREATE RUBRIC</button>
+
 
                 <div class="table-container">
                     <div class="table-header">
@@ -83,77 +86,228 @@
     </div>
 
     <script type="module">
-import { api } from "./js/aigs-api.js";
+        import { api } from "./js/aigs-api.js";
 
-fetch("sidebar.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("sidebar-container").innerHTML = html;
-    const currentLink = document.querySelector(".nav-link[data-page=\"assignments\"]");
-    if (currentLink) currentLink.classList.add("active");
-  })
-  .catch(err => console.error("Failed to load sidebar:", err));
+        fetch("sidebar.html")
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById("sidebar-container").innerHTML = html;
+                const currentLink = document.querySelector('.nav-link[data-page="assignments"]');
+                if (currentLink) currentLink.classList.add("active");
+            })
+            .catch(err => console.error("Failed to load sidebar:", err));
 
-const assignmentSelect = document.getElementById("assignment");
-const batchSelect = document.getElementById("batch");
+        const courseSelect = document.getElementById("course");
+        const batchSelect = document.getElementById("batch");
+        const assignmentSelect = document.getElementById("assignment");
 
-async function loadAssignments() {
-  const { assignments } = await api.assignments.list();
-  // replace options
-  assignmentSelect.innerHTML = "<option value=\"\">Select Assignment</option>";
-  for (const a of assignments) {
-    const opt = document.createElement("option");
-    opt.value = a.assignment_id;
-    opt.textContent = `${a.batch} - ${a.assignment_name} (ID: ${a.assignment_id})`;
-    assignmentSelect.appendChild(opt);
-  }
-}
+        const uploadBtn = document.getElementById("uploadRubricBtn");
+        const createBtn = document.getElementById("createRubricBtn");
 
-async function loadRubrics() {
-  const assignmentId = assignmentSelect.value;
-  if (!assignmentId) return;
-  const { rubrics } = await api.rubrics.byAssignment(assignmentId);
-  const tableBody = document.getElementById("tableBody");
-  tableBody.innerHTML = "";
-  if (!rubrics.length) {
-    const empty = document.createElement("div");
-    empty.className = "table-row empty-rows";
-    empty.innerHTML = `<div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div><div class=\"table-cell\"></div>`;
-    tableBody.appendChild(empty);
-    return;
-  }
-  for (const r of rubrics) {
-    const row = document.createElement("div");
-    row.className = "table-row";
-    row.innerHTML = `
-      <div class=\"table-cell\">${r.rubric_name}</div>
-      <div class=\"table-cell\">${new Date(r.create_date).toLocaleString()}</div>
-      <div class=\"table-cell\">${r.created_by ? r.created_by : ""}</div>
-      <div class=\"table-cell\"><span class=\"view-icon\" title=\"View\">🔍</span></div>
-      <div class=\"table-cell\"><span class=\"edit-icon\" title=\"Edit\">📝</span></div>
+        function setOptions(select, items, placeholder = "Select") {
+            select.innerHTML = "";
+            const ph = document.createElement("option");
+            ph.value = "";
+            ph.textContent = placeholder;
+            select.appendChild(ph);
+
+            for (const it of items) {
+                const opt = document.createElement("option");
+                opt.value = it.value;
+                opt.textContent = it.label;
+                select.appendChild(opt);
+            }
+        }
+
+        async function loadCourses() {
+            const { courses } = await api.courses.list(); // expected { courses: [...] }
+            setOptions(
+                courseSelect,
+                (courses || []).map(c => ({ value: c.course_name ?? c.name ?? c, label: c.course_name ?? c.name ?? String(c) })),
+                "Select Course"
+            );
+        }
+
+        async function loadBatchesByCourse() {
+            const course_name = courseSelect.value;
+            assignmentSelect.value = "";
+            document.getElementById("tableBody").innerHTML = "";
+
+            if (!course_name) {
+                setOptions(batchSelect, [], "Select Batch");
+                return;
+            }
+
+            const { batches } = await api.batches.list({ course_name });
+            setOptions(
+                batchSelect,
+                (batches || []).map(b => ({
+                    value: b.batch ?? b.b_yr ?? b,
+                    label: b.batch_label ?? b.batch ?? b.b_yr ?? String(b),
+                })),
+                "Select Batch"
+            );
+        }
+
+        async function loadAssignments() {
+            const course_name = courseSelect.value;
+            const batch = batchSelect.value;
+
+            // clear
+            setOptions(assignmentSelect, [], "Select Assignment");
+            document.getElementById("tableBody").innerHTML = "";
+
+            // you can allow loading by batch only or by course+batch
+            const params = {};
+            if (course_name) params.course_name = course_name;
+            if (batch) params.batch = batch;
+
+            const { assignments } = await api.assignments.list(params);
+
+            setOptions(
+                assignmentSelect,
+                (assignments || []).map(a => ({
+                    value: a.assignment_id,
+                    label: `${a.batch ?? ""} - ${a.assignment_name} (ID: ${a.assignment_id})`,
+                })),
+                "Select Assignment"
+            );
+        }
+
+        async function loadRubrics() {
+            const assignmentId = assignmentSelect.value;
+            const tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = "";
+
+            if (!assignmentId) return;
+
+            const { rubrics } = await api.rubrics.byAssignment(assignmentId);
+
+            if (!rubrics || rubrics.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "table-row empty-rows";
+                empty.innerHTML = `
+      <div class="table-cell"></div>
+      <div class="table-cell"></div>
+      <div class="table-cell"></div>
+      <div class="table-cell"></div>
+      <div class="table-cell"></div>
     `;
-    row.querySelector(".view-icon").addEventListener("click", () => alert(r.rubric_text || "No rubric text"));
-    tableBody.appendChild(row);
-  }
-}
+                tableBody.appendChild(empty);
+                return;
+            }
 
-// Wire up buttons
-const buttons = Array.from(document.querySelectorAll(".add-button"));
-const createBtn = buttons.find(b => b.textContent.includes("CREATE")) || buttons[1];
+            for (const r of rubrics) {
+                const row = document.createElement("div");
+                row.className = "table-row";
 
-createBtn.addEventListener("click", async () => {
-  const assignmentId = Number(assignmentSelect.value);
-  if (!assignmentId) return alert("Select an assignment");
-  const rubric_name = prompt("Rubric name:");
-  if (!rubric_name) return;
-  const rubric_text = prompt("Paste rubric text (optional):") || "";
-  await api.rubrics.create({ rubric_name, assignment_id: assignmentId, rubric_text });
-  await loadRubrics();
-});
+                row.innerHTML = `
+      <div class="table-cell">${r.rubric_name ?? ""}</div>
+      <div class="table-cell">${r.create_date ? new Date(r.create_date).toLocaleString() : ""}</div>
+      <div class="table-cell">${r.created_by ?? ""}</div>
+      <div class="table-cell"><button class="icon-btn" title="View">🔍</button></div>
+      <div class="table-cell"><button class="icon-btn" title="Edit">📝</button></div>
+    `;
 
-assignmentSelect.addEventListener("change", loadRubrics);
+                const [viewBtn, editBtn] = row.querySelectorAll("button.icon-btn");
 
-await loadAssignments();
-</script>
+                viewBtn.addEventListener("click", () => {
+                    alert(r.rubric_text || "No rubric text");
+                });
+
+                editBtn.addEventListener("click", () => {
+                    // simplest: open edit page with rubric_id
+                    // example: edit_rubric.html?rubric_id=123
+                    window.location.href = `edit_rubric.html?rubric_id=${encodeURIComponent(r.rubric_id)}`;
+                });
+
+                tableBody.appendChild(row);
+            }
+        }
+
+        // CREATE RUBRIC
+        createBtn.addEventListener("click", async () => {
+            try {
+                const assignmentId = Number(assignmentSelect.value);
+                if (!assignmentId) return alert("Select an assignment");
+
+                const rubric_name = prompt("Rubric name:");
+                if (!rubric_name) return;
+
+                const rubric_text = prompt("Paste rubric text (optional):") || "";
+
+                await api.rubrics.create({ rubric_name, assignment_id: assignmentId, rubric_text });
+                await loadRubrics();
+                alert("Rubric created successfully!");
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        // UPLOAD RUBRIC (needs backend endpoint if you want file upload)
+        uploadBtn.addEventListener("click", async () => {
+            const assignmentId = Number(assignmentSelect.value);
+            if (!assignmentId) return alert("Select an assignment");
+
+            // Create a file picker
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".pdf,.doc,.docx,.txt";
+
+            input.onchange = async () => {
+                const file = input.files?.[0];
+                if (!file) return;
+
+                alert("Upload endpoint not connected yet. If you want, I can give you the backend route for /api/rubrics/upload.");
+                // Example (when backend exists):
+                // const fd = new FormData();
+                // fd.append("assignment_id", String(assignmentId));
+                // fd.append("file", file);
+                // await request("/api/rubrics/upload", { method: "POST", body: fd });
+                // await loadRubrics();
+            };
+
+            input.click();
+        });
+
+        // change handlers
+        courseSelect.addEventListener("change", async () => {
+            try {
+                await loadBatchesByCourse();
+                await loadAssignments();
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        batchSelect.addEventListener("change", async () => {
+            try {
+                await loadAssignments();
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        assignmentSelect.addEventListener("change", async () => {
+            try {
+                await loadRubrics();
+            } catch (e) {
+                alert(e.message);
+            }
+        });
+
+        // initial load
+        (async function init() {
+            try {
+                await loadCourses();
+                // optionally auto-load batches/assignments if defaults exist
+            } catch (e) {
+                console.error(e);
+                alert(e.message);
+            }
+        })();
+    </script>
+
 </body>
+
 </html>

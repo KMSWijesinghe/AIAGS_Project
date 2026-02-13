@@ -1,157 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grading</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grading</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div id="sidebar-container"></div>
+  <div class="container">
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <h1 class="page-title" style="text-align: center;">Grading</h1>
-            <div class="content-card">
-                <div class="form-row three-col">
-                    <label class="form-label">Batch:</label>
-                    <select class="form-select" id="batch">
-                        <option value="">- Select Batch -</option>
-                        <option value="2024">Batch 2024</option>
-                        <option value="2023">Batch 2023</option>
-                        <option value="2022">Batch 2022</option>
-                    </select>
-                    <label class="form-label">Assignment:</label>
-                    <select class="form-select" id="assignment">
-                        <option value="">- Select Assignment -</option>
-                        <option value="assignment1">Assignment 1</option>
-                        <option value="assignment2">Assignment 2</option>
-                        <option value="assignment3">Assignment 3</option>
-                    </select>
-                    
-                    
-                </div>
+    <!-- Main Content -->
+    <div class="main-content">
+      <h1 class="page-title" style="text-align: center;">Grading</h1>
+      <div class="content-card">
+        <div class="form-row three-col">
+          <label class="form-label">Batch:</label>
+          <select class="form-select" id="batch">
+            <option value="">- Select Batch -</option>
+            <option value="2024">Batch 2024</option>
+            <option value="2023">Batch 2023</option>
+            <option value="2022">Batch 2022</option>
+          </select>
+          <label class="form-label">Assignment:</label>
+          <select class="form-select" id="assignment">
+            <option value="">- Select Assignment -</option>
+            <option value="assignment1">Assignment 1</option>
+            <option value="assignment2">Assignment 2</option>
+            <option value="assignment3">Assignment 3</option>
+          </select>
 
-                <div class="form-row six-col">
-                    <label class="form-label">No of Submissions:</label>
-                    <input type="text" class="form-input" id="submissions" readonly>
-                    <button class="add-button">View List</button>
 
-                    <label class="form-label">Rubric:</label>
-                    <input type="text" class="form-input" id="rubric" readonly>
-                    <button class="add-button">View Rubric</button>
-                </div>
-
-                
-
-                <button class="add-button">GRADE ASSIGNMENTS</button>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <div class="table-header-cell">STUDENT NO</div>
-                        <div class="table-header-cell">VIEW REPORT</div>
-                        <div class="table-header-cell">ADD REVIEW</div>
-                        <div class="table-header-cell">AI SCORE</div>
-                        <div class="table-header-cell">TEACHER'S SCORE</div>
-                    </div>
-                    <div class="table-body" id="tableBody">
-                        <div class="table-row">
-                            <div class="table-cell">[Student No]</div>
-                            <div class="table-cell">
-                                <span class="icon-button">👁</span>
-                            </div>
-                            <div class="table-cell">
-                                <span class="icon-button">✏️</span>
-                            </div>
-                            <div class="table-cell">XX</div>
-                            <div class="table-cell"></div>
-                        </div>
-                        <div class="table-row empty-row">
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                        </div>
-                        <div class="table-row empty-row">
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                            <div class="table-cell"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bottom-buttons">
-                    <button class="add-button">ASSIGN TEACHERS</button>
-                    <button class="add-button">PUBLISH GRADES</button>
-                </div>
-            </div>
         </div>
+
+        <div class="form-row six-col">
+          <label class="form-label">No of Submissions:</label>
+          <input type="text" class="form-input" id="submissions" readonly>
+          <button class="add-button">View List</button>
+
+          <label class="form-label">Rubric:</label>
+          <input type="text" class="form-input" id="rubric" readonly>
+          <button class="add-button">View Rubric</button>
+        </div>
+
+
+
+        <button class="add-button">GRADE ASSIGNMENTS</button>
+
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-header-cell">STUDENT NO</div>
+            <div class="table-header-cell">VIEW REPORT</div>
+            <div class="table-header-cell">ADD REVIEW</div>
+            <div class="table-header-cell">AI SCORE</div>
+            <div class="table-header-cell">TEACHER'S SCORE</div>
+          </div>
+          <div class="table-body" id="tableBody">
+            <div class="table-row">
+              <div class="table-cell">[Student No]</div>
+              <div class="table-cell">
+                <span class="icon-button">👁</span>
+              </div>
+              <div class="table-cell">
+                <span class="icon-button">✏️</span>
+              </div>
+              <div class="table-cell">XX</div>
+              <div class="table-cell"></div>
+            </div>
+            <div class="table-row empty-row">
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+            </div>
+            <div class="table-row empty-row">
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+              <div class="table-cell"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-buttons">
+          <button class="add-button">ASSIGN TEACHERS</button>
+          <button class="add-button">PUBLISH GRADES</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script type="module">
-import { api } from "./js/aigs-api.js";
+  <script type="module">
+    import { api } from "./js/aigs-api.js";
 
-fetch("sidebar.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("sidebar-container").innerHTML = html;
-    const currentLink = document.querySelector(".nav-link[data-page=\"assignments\"]");
-    if (currentLink) currentLink.classList.add("active");
-  })
-  .catch(err => console.error("Failed to load sidebar:", err));
+    fetch("sidebar.html")
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById("sidebar-container").innerHTML = html;
+        const currentLink = document.querySelector(".nav-link[data-page=\"assignments\"]");
+        if (currentLink) currentLink.classList.add("active");
+      })
+      .catch(err => console.error("Failed to load sidebar:", err));
 
-const batchSel = document.getElementById("batch");
-const assignmentSel = document.getElementById("assignment");
-const submissionsInput = document.getElementById("submissions");
-const rubricInput = document.getElementById("rubric");
-const tableBody = document.getElementById("tableBody");
+    const batchSel = document.getElementById("batch");
+    const assignmentSel = document.getElementById("assignment");
+    const submissionsInput = document.getElementById("submissions");
+    const rubricInput = document.getElementById("rubric");
+    const tableBody = document.getElementById("tableBody");
 
-// make buttons usable
-const gradeBtn = Array.from(document.querySelectorAll(".add-button")).find(b => b.textContent.includes("GRADE"));
-const publishBtn = Array.from(document.querySelectorAll(".add-button")).find(b => b.textContent.includes("PUBLISH"));
+    // make buttons usable
+    const gradeBtn = Array.from(document.querySelectorAll(".add-button")).find(b => b.textContent.includes("GRADE"));
+    const publishBtn = Array.from(document.querySelectorAll(".add-button")).find(b => b.textContent.includes("PUBLISH"));
 
-async function loadAssignments() {
-  const { assignments } = await api.assignments.list();
-  assignmentSel.innerHTML = "<option value="">- Select Assignment -</option>";
-  for (const a of assignments) {
-    const opt = document.createElement("option");
-    opt.value = a.assignment_id;
-    opt.textContent = `${a.batch} - ${a.assignment_name}`;
-    assignmentSel.appendChild(opt);
-  }
-}
+    async function loadAssignments() {
+      const { assignments } = await api.assignments.list();
+      //assignmentSel.innerHTML = "<option value="">- Select Assignment -</option>";
+      for (const a of assignments) {
+        const opt = document.createElement("option");
+        opt.value = a.assignment_id;
+        opt.textContent = `${a.batch} - ${a.assignment_name}`;
+        assignmentSel.appendChild(opt);
+      }
+    }
 
-async function refresh() {
-  const assignmentId = assignmentSel.value;
-  tableBody.innerHTML = "";
-  submissionsInput.value = "";
-  rubricInput.value = "";
-  if (!assignmentId) return;
+    async function refresh() {
+      const assignmentId = assignmentSel.value;
+      tableBody.innerHTML = "";
+      submissionsInput.value = "";
+      rubricInput.value = "";
+      if (!assignmentId) return;
 
-  const { results } = await api.grading.resultsByAssignment(assignmentId);
-  submissionsInput.value = results.length;
+      const { results } = await api.grading.resultsByAssignment(assignmentId);
+      submissionsInput.value = results.length;
 
-  // load rubric name (show count)
-  const { rubrics } = await api.rubrics.byAssignment(assignmentId);
-  rubricInput.value = rubrics.length ? rubrics[0].rubric_name : "(none)";
+      // load rubric name (show count)
+      const { rubrics } = await api.rubrics.byAssignment(assignmentId);
+      rubricInput.value = rubrics.length ? rubrics[0].rubric_name : "(none)";
 
-  if (!results.length) {
-    const empty = document.createElement("div");
-    empty.className = "table-row empty-row";
-    empty.innerHTML = `<div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div>`;
-    tableBody.appendChild(empty);
-    return;
-  }
+      if (!results.length) {
+        const empty = document.createElement("div");
+        empty.className = "table-row empty-row";
+        empty.innerHTML = `<div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div><div class="table-cell"></div>`;
+        tableBody.appendChild(empty);
+        return;
+      }
 
-  for (const r of results) {
-    const row = document.createElement("div");
-    row.className = "table-row";
-    row.innerHTML = `
+      for (const r of results) {
+        const row = document.createElement("div");
+        row.className = "table-row";
+        row.innerHTML = `
       <div class="table-cell">${r.student_no}</div>
       <div class="table-cell"><span class="icon-button" title="View AI report">👁</span></div>
       <div class="table-cell"><span class="icon-button" title="Add teacher score">✏️</span></div>
@@ -160,48 +162,49 @@ async function refresh() {
 
     `;
 
-    const [viewBtn, editBtn] = row.querySelectorAll(".icon-button");
-    viewBtn.addEventListener("click", () => alert(r.ai_review_report || "No AI report yet"));
-    editBtn.addEventListener("click", async () => {
-      const val = prompt("Enter teacher/final score (0-100):", r.final_grade != null ? String(r.final_grade) : "");
-      if (val === null) return;
-      const num = Number(val);
-      if (!Number.isFinite(num) || num < 0 || num > 100) return alert("Score must be 0-100");
-      await api.grading.setFinal(r.portfolio_id, { final_grade: num, status: "DRAFT" });
-      await refresh();
+        const [viewBtn, editBtn] = row.querySelectorAll(".icon-button");
+        viewBtn.addEventListener("click", () => alert(r.ai_review_report || "No AI report yet"));
+        editBtn.addEventListener("click", async () => {
+          const val = prompt("Enter teacher/final score (0-100):", r.final_grade != null ? String(r.final_grade) : "");
+          if (val === null) return;
+          const num = Number(val);
+          if (!Number.isFinite(num) || num < 0 || num > 100) return alert("Score must be 0-100");
+          await api.grading.setFinal(r.portfolio_id, { final_grade: num, status: "DRAFT" });
+          await refresh();
+        });
+
+        tableBody.appendChild(row);
+      }
+    }
+
+    assignmentSel.addEventListener("change", refresh);
+
+    gradeBtn?.addEventListener("click", async () => {
+      const assignmentId = assignmentSel.value;
+      if (!assignmentId) return alert("Select an assignment");
+      gradeBtn.disabled = true;
+      try {
+        await api.grading.gradeAssignmentAI(assignmentId);
+        await refresh();
+        alert("AI grading completed (or queued)");
+      } finally {
+        gradeBtn.disabled = false;
+      }
     });
 
-    tableBody.appendChild(row);
-  }
-}
+    publishBtn?.addEventListener("click", async () => {
+      const assignmentId = assignmentSel.value;
+      if (!assignmentId) return alert("Select an assignment");
+      await api.grading.publishAssignment(assignmentId);
+      await refresh();
+      alert("Grades published");
+    });
 
-assignmentSel.addEventListener("change", refresh);
-
-gradeBtn?.addEventListener("click", async () => {
-  const assignmentId = assignmentSel.value;
-  if (!assignmentId) return alert("Select an assignment");
-  gradeBtn.disabled = true;
-  try {
-    await api.grading.gradeAssignmentAI(assignmentId);
-    await refresh();
-    alert("AI grading completed (or queued)");
-  } finally {
-    gradeBtn.disabled = false;
-  }
-});
-
-publishBtn?.addEventListener("click", async () => {
-  const assignmentId = assignmentSel.value;
-  if (!assignmentId) return alert("Select an assignment");
-  await api.grading.publishAssignment(assignmentId);
-  await refresh();
-  alert("Grades published");
-});
-
-await loadAssignments();
-</script>
+    await loadAssignments();
+  </script>
 
 
 
 </body>
+
 </html>
