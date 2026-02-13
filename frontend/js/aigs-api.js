@@ -69,12 +69,23 @@ export const api = {
 
   rubrics: {
     byAssignment: (assignmentId) => request(`/api/rubrics/assignment/${assignmentId}`),
+
     create: (payload) =>
       request("/api/rubrics", { method: "POST", body: JSON.stringify(payload) }),
+
+    // ✅ ADD HERE
+    upload: ({ assignment_id, rubric_name, file }) => {
+      const fd = new FormData();
+      fd.append("assignment_id", String(assignment_id));
+      if (rubric_name) fd.append("rubric_name", rubric_name);
+      fd.append("file", file);
+      return request("/api/rubrics/upload", { method: "POST", body: fd });
+    },
 
     // optional (recommended for edit page)
     update: (rubricId, payload) =>
       request(`/api/rubrics/${rubricId}`, { method: "PUT", body: JSON.stringify(payload) }),
+
     remove: (rubricId) =>
       request(`/api/rubrics/${rubricId}`, { method: "DELETE" }),
   },
@@ -95,6 +106,8 @@ export const api = {
       return request("/api/portfolios/upload", { method: "POST", body: fd });
     },
   },
+
+
 
   grading: {
     gradePortfolioAI: (portfolioId) =>

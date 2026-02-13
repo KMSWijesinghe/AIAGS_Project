@@ -28,7 +28,7 @@ app.use('/', express.static(frontendDir));
 
 // uploaded files
 const uploadDir = path.resolve(__dirname, '../../', process.env.UPLOAD_DIR || './uploads');
-app.use('/uploads', express.static(uploadDir));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use("/api", metaRoutes);

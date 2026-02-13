@@ -212,6 +212,10 @@
                 const [viewBtn, editBtn] = row.querySelectorAll("button.icon-btn");
 
                 viewBtn.addEventListener("click", () => {
+                    if (r.rubric_file_path) {
+                        window.open(r.rubric_file_path, "_blank"); // open PDF/DOC in new tab
+                        return;
+                    }
                     alert(r.rubric_text || "No rubric text");
                 });
 
@@ -249,7 +253,6 @@
             const assignmentId = Number(assignmentSelect.value);
             if (!assignmentId) return alert("Select an assignment");
 
-            // Create a file picker
             const input = document.createElement("input");
             input.type = "file";
             input.accept = ".pdf,.doc,.docx,.txt";
@@ -258,17 +261,29 @@
                 const file = input.files?.[0];
                 if (!file) return;
 
-                alert("Upload endpoint not connected yet. If you want, I can give you the backend route for /api/rubrics/upload.");
-                // Example (when backend exists):
-                // const fd = new FormData();
-                // fd.append("assignment_id", String(assignmentId));
-                // fd.append("file", file);
-                // await request("/api/rubrics/upload", { method: "POST", body: fd });
-                // await loadRubrics();
+                const rubric_name = prompt("Rubric name (optional):") || "";
+
+                try {
+                    await api.rubrics.upload({ assignment_id: assignmentId, rubric_name, file });
+                    await loadRubrics();
+                    alert("Rubric uploaded!");
+
+
+                    await loadRubrics();
+                } catch (e) {
+                    alert(e.message);
+                }
             };
 
             input.click();
+            const resp = await api.rubrics.upload({ assignment_id: assignmentId, rubric_name, file });
+            console.log("UPLOAD RESPONSE:", resp);
+
+            const list = await api.rubrics.byAssignment(assignmentId);
+            console.log("RUBRICS AFTER UPLOAD:", list);
+
         });
+
 
         // change handlers
         courseSelect.addEventListener("change", async () => {

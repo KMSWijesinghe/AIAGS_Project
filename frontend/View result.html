@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -206,6 +207,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Shared sidebar -->
@@ -230,12 +232,8 @@
 
                     <div class="filter-group">
                         <label class="filter-label">Assignment:</label>
-                        <select class="filter-dropdown" id="assignmentFilter">
+                        <select class="filter-dropdown" id="assignmentFilter" disabled>
                             <option value="">Select Assignment</option>
-                            <option value="Assignment 1">Assignment 1</option>
-                            <option value="Assignment 2">Assignment 2</option>
-                            <option value="Assignment 3">Assignment 3</option>
-                            <option value="Assignment 4">Assignment 4</option>
                         </select>
                     </div>
 
@@ -246,7 +244,8 @@
                 <div class="not-released-message" id="notReleasedMessage">
                     <div class="not-released-icon">⚠️</div>
                     <div class="not-released-text">Results Not Released Yet</div>
-                    <div class="not-released-subtext">The results for this assignment have not been published yet. Please check back later.</div>
+                    <div class="not-released-subtext">The results for this assignment have not been published yet.
+                        Please check back later.</div>
                 </div>
 
                 <!-- RESULTS CONTAINER -->
@@ -269,13 +268,16 @@
                                 <div class="feedback-item">
                                     <div class="item-label">Justification</div>
                                     <div class="item-content">
-                                        The presentation was well-structured with clear sections and logical flow. Visual aids were appropriately used and enhanced the overall understanding of the content.
+                                        The presentation was well-structured with clear sections and logical flow.
+                                        Visual aids were appropriately used and enhanced the overall understanding of
+                                        the content.
                                     </div>
                                 </div>
                                 <div class="feedback-item">
                                     <div class="item-label">Feedback</div>
                                     <div class="item-content">
-                                        Excellent organization and presentation skills. Consider adding more transitions between sections to improve flow. Overall, very professional work.
+                                        Excellent organization and presentation skills. Consider adding more transitions
+                                        between sections to improve flow. Overall, very professional work.
                                     </div>
                                 </div>
                             </div>
@@ -287,13 +289,15 @@
                                 <div class="feedback-item">
                                     <div class="item-label">Justification</div>
                                     <div class="item-content">
-                                        The content demonstrates a thorough understanding of the subject matter. Research is comprehensive and well-cited with appropriate academic sources.
+                                        The content demonstrates a thorough understanding of the subject matter.
+                                        Research is comprehensive and well-cited with appropriate academic sources.
                                     </div>
                                 </div>
                                 <div class="feedback-item">
                                     <div class="item-label">Feedback</div>
                                     <div class="item-content">
-                                        Strong analytical skills demonstrated throughout. Some areas could benefit from deeper critical analysis. Continue to develop your research methodology.
+                                        Strong analytical skills demonstrated throughout. Some areas could benefit from
+                                        deeper critical analysis. Continue to develop your research methodology.
                                     </div>
                                 </div>
                             </div>
@@ -305,13 +309,15 @@
                                 <div class="feedback-item">
                                     <div class="item-label">Justification</div>
                                     <div class="item-content">
-                                        Medical terminology and clinical concepts were accurately presented. Evidence of current practice guidelines and research findings.
+                                        Medical terminology and clinical concepts were accurately presented. Evidence of
+                                        current practice guidelines and research findings.
                                     </div>
                                 </div>
                                 <div class="feedback-item">
                                     <div class="item-label">Feedback</div>
                                     <div class="item-content">
-                                        Good understanding of technical aspects. Ensure all medical terms are properly defined for clarity. Keep up the excellent attention to detail.
+                                        Good understanding of technical aspects. Ensure all medical terms are properly
+                                        defined for clarity. Keep up the excellent attention to detail.
                                     </div>
                                 </div>
                             </div>
@@ -331,59 +337,140 @@
     </div>
 
     <script>
-        // Load sidebar
-        fetch("sidebar1.html")
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById("sidebar-container").innerHTML = html;
-
-                const currentLink = document.querySelector('.nav-button[data-page="results"]');
-                if (currentLink) {
-                    currentLink.classList.add("active");
-                }
-            })
-            .catch(error => {
-                console.error("Failed to load sidebar:", error);
-            });
-
-        // Simulate which assignments have results released
-        const releasedResults = {
-            'Medicine-Assignment 1': true,
-            'Medicine-Assignment 2': true,
-            'Surgery-Assignment 2': true,
-            'Pediatrics-Assignment 3': false,
-            'Psychiatry-Assignment 1': false
+        // Example: department-wise assignments
+        const assignmentsByDepartment = {
+            Medicine: ["Assignment 1", "Assignment 2"],
+            Surgery: ["Assignment 1", "Assignment 2", "Assignment 3"],
+            Pediatrics: ["Assignment 3", "Assignment 4"],
+            Psychiatry: ["Assignment 1"]
         };
 
+        // Example: results database (replace with backend later)
+        // Key format: Department|Assignment
+        const resultsDB = {
+            "Medicine|Assignment 1": {
+                released: true,
+                score: 85,
+                total: 100,
+                sections: [
+                    {
+                        title: "Overall Presentation and Organisation",
+                        justification: "The presentation was well-structured with clear sections and logical flow.",
+                        feedback: "Excellent organization. Add more transitions between sections."
+                    },
+                    {
+                        title: "Content Quality",
+                        justification: "Thorough understanding with comprehensive research and citations.",
+                        feedback: "Good analysis; deepen critical evaluation in a few parts."
+                    },
+                    {
+                        title: "Technical Accuracy",
+                        justification: "Terminology and clinical concepts were accurately presented.",
+                        feedback: "Define terms when first used for clarity."
+                    }
+                ]
+            },
+            "Medicine|Assignment 2": { released: true, score: 72, total: 100, sections: [] },
+            "Surgery|Assignment 2": { released: true, score: 90, total: 100, sections: [] },
+            "Pediatrics|Assignment 3": { released: false },
+            "Psychiatry|Assignment 1": { released: false }
+        };
+
+        const departmentFilter = document.getElementById("departmentFilter");
+        const assignmentFilter = document.getElementById("assignmentFilter");
+
+        departmentFilter.addEventListener("change", () => {
+            const dept = departmentFilter.value;
+
+            // Reset assignments
+            assignmentFilter.innerHTML = `<option value="">Select Assignment</option>`;
+            assignmentFilter.disabled = true;
+
+            if (!dept || !assignmentsByDepartment[dept]) return;
+
+            // Populate only relevant assignments
+            assignmentsByDepartment[dept].forEach(a => {
+                const opt = document.createElement("option");
+                opt.value = a;
+                opt.textContent = a;
+                assignmentFilter.appendChild(opt);
+            });
+
+            assignmentFilter.disabled = false;
+        });
+
         function viewResults() {
-            const department = document.getElementById('departmentFilter').value;
-            const assignment = document.getElementById('assignmentFilter').value;
+            const department = departmentFilter.value;
+            const assignment = assignmentFilter.value;
 
             if (!department || !assignment) {
-                alert('Please select both Department and Assignment');
+                alert("Please select both Department and Assignment");
                 return;
             }
 
-            const resultsKey = `${department}-${assignment}`;
-            const isReleased = releasedResults[resultsKey];
+            const key = `${department}|${assignment}`;
+            const record = resultsDB[key];
 
-            const notReleasedMessage = document.getElementById('notReleasedMessage');
-            const resultsContainer = document.getElementById('resultsContainer');
+            const notReleasedMessage = document.getElementById("notReleasedMessage");
+            const resultsContainer = document.getElementById("resultsContainer");
 
-            if (isReleased) {
-                // Show results
-                notReleasedMessage.classList.remove('show');
-                resultsContainer.classList.add('show');
-            } else {
-                // Show not released message
-                resultsContainer.classList.remove('show');
-                notReleasedMessage.classList.add('show');
+            // If no record or not released
+            if (!record || record.released !== true) {
+                resultsContainer.classList.remove("show");
+                notReleasedMessage.classList.add("show");
+                return;
             }
+
+            // Released → render data
+            notReleasedMessage.classList.remove("show");
+            resultsContainer.classList.add("show");
+
+            // Score
+            document.getElementById("scoreValue").textContent = record.score ?? "-";
+
+            // Feedback sections render
+            renderSections(record.sections || []);
+        }
+
+        function renderSections(sections) {
+            const container = document.querySelector(".feedback-sections");
+            container.innerHTML = ""; // clear old content
+
+            if (!sections.length) {
+                container.innerHTML = `<div class="section-container">
+        <div class="section-header">Feedback</div>
+        <div class="section-content">
+          <div class="item-content">No detailed feedback available.</div>
+        </div>
+      </div>`;
+                return;
+            }
+
+            sections.forEach(sec => {
+                const div = document.createElement("div");
+                div.className = "section-container";
+                div.innerHTML = `
+        <div class="section-header">${sec.title}</div>
+        <div class="section-content">
+          <div class="feedback-item">
+            <div class="item-label">Justification</div>
+            <div class="item-content">${sec.justification || "-"}</div>
+          </div>
+          <div class="feedback-item">
+            <div class="item-label">Feedback</div>
+            <div class="item-content">${sec.feedback || "-"}</div>
+          </div>
+        </div>
+      `;
+                container.appendChild(div);
+            });
         }
 
         function printResults() {
             window.print();
         }
     </script>
+
 </body>
+
 </html>
