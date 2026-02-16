@@ -2,10 +2,12 @@ import path from 'path';
 import { query } from '../db.js';
 import { gradePortfolio } from '../services/mlClient.js';
 import { z } from 'zod';
+import fs from "fs";
+
 
 const finalSchema = z.object({
   final_grade: z.coerce.number().min(0).max(100),
-  status: z.enum(['DRAFT','PUBLISHED']).optional()
+  status: z.enum(['DRAFT', 'PUBLISHED']).optional()
 });
 
 export async function gradeOne(req, res) {
@@ -19,7 +21,17 @@ export async function gradeOne(req, res) {
     const rubricText = rubricRows[0]?.rubric_text || null;
 
     const absFilePath = path.resolve(process.cwd(), portfolio.portfolio_link.replace(/^\//, ''));
-    const result = await gradePortfolio({ portfolioId, filePath: absFilePath, rubricText });
+
+    // ✅ FILE CHECK
+    if (!fs.existsSync(absFilePath)) {
+      throw new Error(`Portfolio file not found at: ${absFilePath}`);
+    }
+
+    const result = await gradePortfolio({
+      portfolioId,
+      filePath: absFilePath,
+      rubricText
+    });
 
     await query(
       'INSERT INTO ai_grading (portfolio_id, ai_grade, ai_review_report) VALUES (?,?,?) ON DUPLICATE KEY UPDATE ai_grade=VALUES(ai_grade), ai_review_report=VALUES(ai_review_report), graded_at=CURRENT_TIMESTAMP',
@@ -51,7 +63,17 @@ export async function gradeAssignment(req, res) {
       const rubricRows = await query('SELECT rubric_text FROM rubrics WHERE assignment_id=? ORDER BY create_date DESC LIMIT 1', [portfolio.assignment_id]);
       const rubricText = rubricRows[0]?.rubric_text || null;
       const absFilePath = path.resolve(process.cwd(), portfolio.portfolio_link.replace(/^\//, ''));
-      const result = await gradePortfolio({ portfolioId: portfolio.portfolio_id, filePath: absFilePath, rubricText });
+
+      // ✅ FILE CHECK
+      if (!fs.existsSync(absFilePath)) {
+        throw new Error(`Portfolio file not found at: ${absFilePath}`);
+      }
+
+      const result = await gradePortfolio({
+        portfolioId: portfolio.portfolio_id,
+        filePath: absFilePath,
+        rubricText
+      });
 
       await query(
         'INSERT INTO ai_grading (portfolio_id, ai_grade, ai_review_report) VALUES (?,?,?) ON DUPLICATE KEY UPDATE ai_grade=VALUES(ai_grade), ai_review_report=VALUES(ai_review_report), graded_at=CURRENT_TIMESTAMP',

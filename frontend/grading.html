@@ -119,10 +119,12 @@
 
     async function loadAssignments() {
       const { assignments } = await api.assignments.list();
-      //assignmentSel.innerHTML = "<option value="">- Select Assignment -</option>";
+
+      assignmentSel.innerHTML = "<option value=''>- Select Assignment -</option>"; // IMPORTANT
+
       for (const a of assignments) {
         const opt = document.createElement("option");
-        opt.value = a.assignment_id;
+        opt.value = String(a.assignment_id);         // ensure numeric id as string
         opt.textContent = `${a.batch} - ${a.assignment_name}`;
         assignmentSel.appendChild(opt);
       }
@@ -182,11 +184,20 @@
     gradeBtn?.addEventListener("click", async () => {
       const assignmentId = assignmentSel.value;
       if (!assignmentId) return alert("Select an assignment");
+
       gradeBtn.disabled = true;
       try {
-        await api.grading.gradeAssignmentAI(assignmentId);
+        const resp = await api.grading.gradeAssignmentAI(assignmentId);
+
+        const failed = (resp.results || []).filter(x => !x.ok);
         await refresh();
-        alert("AI grading completed (or queued)");
+
+        if (failed.length) {
+          console.error("Grading failures:", failed);
+          alert(`Grading finished with ${failed.length} failures. Check console for details.`);
+        } else {
+          alert("AI grading completed");
+        }
       } finally {
         gradeBtn.disabled = false;
       }
