@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>View Portfolio List</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
+
 <body>
     <div class="container">
         <!-- Sidebar -->
@@ -48,9 +50,9 @@
                         </select>
                     </div>
 
-                     <div class="filter-group">
+                    <div class="filter-group">
                         <span class="filter-label">Assignment</span>
-                        <select class="filter-select" id="filterGrade">
+                        <select class="filter-select" id="filterAssignment">
                             <option value="">Select Assignment</option>
                             <option value="assignment1">Assignment 1</option>
                             <option value="assignment2">Assignment 2</option>
@@ -61,7 +63,7 @@
 
                     <div class="search-group">
                         <span class="filter-label">Search Student:</span>
-                        <input type="text" class="search-input" id="searchStudent" placeholder="">
+                        <input type="text" class="search-input" id="searchStudent" placeholder="" />
                     </div>
 
                     <button class="print-button" onclick="window.print()">🖨</button>
@@ -75,23 +77,28 @@
                         <div class="table-header-cell">FINAL GRADE</div>
                         <div class="table-header-cell">VIEW REPORT</div>
                     </div>
+
                     <div class="table-body" id="tableBody">
-                        <div class="table-row">
+
+                        <!-- Add batch + assignment info here -->
+                        <div class="table-row" data-batch="2024" data-assignment="assignment1" data-portfolio-id="1">
                             <div class="table-cell">ME/2020/001</div>
                             <div class="table-cell">username_251120</div>
                             <div class="table-cell status-approved">Approved</div>
                             <div class="table-cell">B</div>
                             <div class="table-cell">
-                                <span class="view-icon">📄</span>
+                                <span class="view-icon" role="button" tabindex="0" title="View Report">📄</span>
                             </div>
                         </div>
-                        <div class="table-row">
+
+                        <div class="table-row" data-batch="2023" data-assignment="assignment2" data-portfolio-id="2">
                             <div class="table-cell">ME/2020/002</div>
                             <div class="table-cell">username_251120</div>
                             <div class="table-cell status-pending">Pending</div>
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
                         </div>
+
                         <div class="table-row empty-row">
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
@@ -99,6 +106,7 @@
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
                         </div>
+
                         <div class="table-row empty-row">
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
@@ -106,6 +114,7 @@
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
                         </div>
+
                         <div class="table-row empty-row">
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
@@ -113,6 +122,7 @@
                             <div class="table-cell"></div>
                             <div class="table-cell"></div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -120,67 +130,89 @@
     </div>
 
     <script>
-        // Load shared sidebar
+        // Sidebar load
         fetch("sidebar.html")
-            .then(response => response.text())
+            .then(r => r.text())
             .then(html => {
                 document.getElementById("sidebar-container").innerHTML = html;
-
-                // mark current page in sidebar
-                // Use .nav-link or .nav-button depending on sidebar.html
                 const currentLink =
                     document.querySelector('.nav-link[data-page="portfolio"]') ||
                     document.querySelector('.nav-button[data-page="portfolio"]');
-                if (currentLink) {
-                    currentLink.classList.add("active");
-                }
+                if (currentLink) currentLink.classList.add("active");
             })
-            .catch(error => {
-                console.error("Failed to load sidebar:", error);
-            });
+            .catch(err => console.error("Failed to load sidebar:", err));
 
-        // Filter functionality
-        document.getElementById('filterStatus').addEventListener('change', filterTable);
-        document.getElementById('filterGrade').addEventListener('change', filterTable);
-        document.getElementById('searchStudent').addEventListener('input', filterTable);
+        // Ensure all listeners attach properly
+        document.addEventListener("DOMContentLoaded", () => {
+            const selectBatch = document.getElementById("selectBatch");
+            const filterStatus = document.getElementById("filterStatus");
+            const filterGrade = document.getElementById("filterGrade");
+            const filterAssignment = document.getElementById("filterAssignment");
+            const searchStudent = document.getElementById("searchStudent");
+
+            // If any element missing, stop to avoid "not responding" JS errors
+            if (!selectBatch || !filterStatus || !filterGrade || !filterAssignment || !searchStudent) {
+                console.error("Filter elements missing. Check IDs in HTML.");
+                return;
+            }
+
+            selectBatch.addEventListener("change", filterTable);
+            filterStatus.addEventListener("change", filterTable);
+            filterGrade.addEventListener("change", filterTable);
+            filterAssignment.addEventListener("change", filterTable);
+            searchStudent.addEventListener("input", filterTable);
+
+            filterTable();
+        });
 
         function filterTable() {
-            const statusFilter = document.getElementById('filterStatus').value.toLowerCase();
-            const gradeFilter = document.getElementById('filterGrade').value;
-            const searchText = document.getElementById('searchStudent').value.toLowerCase();
-            
-            const rows = document.querySelectorAll('.table-row:not(.empty-row)');
-            
+            const batchFilter = document.getElementById("selectBatch").value;               // "2024"
+            const statusFilter = document.getElementById("filterStatus").value.toLowerCase(); // "approved"
+            const gradeFilter = document.getElementById("filterGrade").value;               // "A"
+            const assignmentFilter = document.getElementById("filterAssignment").value;     // "assignment1"
+            const searchText = document.getElementById("searchStudent").value.toLowerCase();
+
+            const rows = document.querySelectorAll(".table-row:not(.empty-row)");
+
             rows.forEach(row => {
-                const cells = row.querySelectorAll('.table-cell');
-                const studentNo = cells[0].textContent.toLowerCase();
-                const status = cells[2].textContent.toLowerCase();
-                const grade = cells[3].textContent;
-                
-                let showRow = true;
-                
-                if (statusFilter && !status.includes(statusFilter)) {
-                    showRow = false;
-                }
-                
-                if (gradeFilter && grade !== gradeFilter) {
-                    showRow = false;
-                }
-                
-                if (searchText && !studentNo.includes(searchText)) {
-                    showRow = false;
-                }
-                
-                row.style.display = showRow ? 'grid' : 'none';
+                const cells = row.querySelectorAll(".table-cell");
+
+                const studentNo = (cells[0]?.textContent || "").toLowerCase();
+                const status = (cells[2]?.textContent || "").toLowerCase();
+                const grade = (cells[3]?.textContent || "").trim();
+
+                const rowBatch = row.dataset.batch || "";
+                const rowAssignment = row.dataset.assignment || "";
+
+                let show = true;
+
+                if (batchFilter && rowBatch !== batchFilter) show = false;
+                if (statusFilter && !status.includes(statusFilter)) show = false;
+                if (gradeFilter && grade !== gradeFilter) show = false;
+                if (assignmentFilter && rowAssignment !== assignmentFilter) show = false;
+                if (searchText && !studentNo.includes(searchText)) show = false;
+
+                row.style.display = show ? "grid" : "none";
             });
         }
 
-        // View report functionality
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('view-icon')) {
-                alert('View report functionality');
+        // View report action
+        document.addEventListener("click", (e) => {
+            const icon = e.target.closest(".view-icon");
+            if (!icon) return;
+
+            const row = icon.closest(".table-row");
+            const portfolioId = row?.dataset?.portfolioId;
+
+            // Replace with your real navigation
+            if (portfolioId) {
+                // Example: window.location.href = `view_report.html?portfolio_id=${portfolioId}`;
+                alert("Open report for portfolio_id = " + portfolioId);
+            } else {
+                alert("No portfolio_id found on this row.");
             }
         });
     </script>
 </body>
+
 </html>
