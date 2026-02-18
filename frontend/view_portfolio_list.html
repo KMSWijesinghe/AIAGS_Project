@@ -34,8 +34,8 @@
                         <span class="filter-label">Status</span>
                         <select class="filter-select" id="filterStatus">
                             <option value="">Select Status</option>
-                            <option value="approved">Approved</option>
-                            <option value="pending">Pending</option>
+                            <option value="PUBLISHED">Published</option>
+                            <option value="DRAFT">Draft</option>
                         </select>
                     </div>
 
@@ -52,12 +52,8 @@
 
                     <div class="filter-group">
                         <span class="filter-label">Assignment</span>
-                        <select class="filter-select" id="filterAssignment">
+                        <select class="filter-select" id="filterAssignment" disabled>
                             <option value="">Select Assignment</option>
-                            <option value="assignment1">Assignment 1</option>
-                            <option value="assignment2">Assignment 2</option>
-                            <option value="assignment3">Assignment 3</option>
-                            <option value="assignment4">Assignment 4</option>
                         </select>
                     </div>
 
@@ -130,73 +126,189 @@
     </div>
 
     <script>
-        // Sidebar load
-        fetch("sidebar.html")
-            .then(r => r.text())
-            .then(html => {
-                document.getElementById("sidebar-container").innerHTML = html;
-                const currentLink =
-                    document.querySelector('.nav-link[data-page="portfolio"]') ||
-                    document.querySelector('.nav-button[data-page="portfolio"]');
-                if (currentLink) currentLink.classList.add("active");
-            })
-            .catch(err => console.error("Failed to load sidebar:", err));
+        const API_BASE = "http://localhost:4000";
 
-        // Ensure all listeners attach properly
         document.addEventListener("DOMContentLoaded", () => {
             const selectBatch = document.getElementById("selectBatch");
             const filterStatus = document.getElementById("filterStatus");
             const filterGrade = document.getElementById("filterGrade");
             const filterAssignment = document.getElementById("filterAssignment");
             const searchStudent = document.getElementById("searchStudent");
+            const tableBody = document.getElementById("tableBody");
 
-            // If any element missing, stop to avoid "not responding" JS errors
-            if (!selectBatch || !filterStatus || !filterGrade || !filterAssignment || !searchStudent) {
-                console.error("Filter elements missing. Check IDs in HTML.");
-                return;
-            }
+            // init assignment dropdown
+            filterAssignment.innerHTML = "<option value=''>Select Batch First</option>";
+            filterAssignment.disabled = true;
 
-            selectBatch.addEventListener("change", filterTable);
+            // Batch -> load assignments
+            selectBatch.addEventListener("change", async () => {
+                await loadAssignmentsForBatch(selectBatch.value);
+
+                // clear table until assignment chosen
+                tableBody.innerHTML = "";
+            });
+
+            // Assignment -> load results
+            filterAssignment.addEventListener("change", async () => {
+                await loadResults();
+                filterTable();
+            });
+
+            // client-side filters
             filterStatus.addEventListener("change", filterTable);
             filterGrade.addEventListener("change", filterTable);
-            filterAssignment.addEventListener("change", filterTable);
             searchStudent.addEventListener("input", filterTable);
 
-            filterTable();
+            async function authFetch(url) {
+                const token = localStorage.getItem("aigs_token");
+                return fetch(url, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+            }
+
+            // ✅ load assignments only for selected batch
+            async function loadAssignmentsForBatch(batch) {
+                filterAssignment.innerHTML = "<option value=''>Loading...</option>";
+                filterAssignment.disabled = true;
+
+                if (!batch) {
+                    filterAssignment.innerHTML = "<option value=''>Select Batch First</option>";
+                    return;
+                }
+
+                try {
+                    const url = `${API_BASE}/api/assignments?batch=${encodeURIComponent(batch)}`;
+                    const resp = await authFetch(url);
+
+                    if (!resp.ok) {
+                        const t = await resp.text();
+                        console.error("Assignments error:", resp.status, t);
+                        filterAssignment.innerHTML = "<option value=''>Failed to load assignments</option>";
+                        return;
+                    }
+
+                    const data = await resp.json();
+                    const assignments = data.assignments || [];
+
+                    filterAssignment.innerHTML = "<option value=''>Select Assignment</option>";
+
+                    if (assignments.length === 0) {
+                        filterAssignment.innerHTML = `<option value=''>No assignments for batch ${batch}</option>`;
+                        filterAssignment.disabled = true;
+                        return;
+                    }
+
+                    for (const a of assignments) {
+                        const opt = document.createElement("option");
+                        opt.value = String(a.assignment_id);
+                        opt.textContent = a.assignment_name; // e.g. CA1
+                        filterAssignment.appendChild(opt);
+                    }
+
+                    filterAssignment.disabled = false;
+                } catch (e) {
+                    console.error("loadAssignmentsForBatch failed:", e);
+                    filterAssignment.innerHTML = "<option value=''>Failed to load assignments</option>";
+                }
+            }
+
+            // ✅ load results for selected assignment (includes final_grade + status)
+            async function loadResults() {
+                const assignmentId = filterAssignment.value;
+
+                if (!assignmentId) {
+                    tableBody.innerHTML = "";
+                    return;
+                }
+
+                try {
+                    const url = `${API_BASE}/api/grading/assignment/${encodeURIComponent(assignmentId)}/results`;
+                    const resp = await authFetch(url);
+
+                    if (!resp.ok) {
+                        const t = await resp.text();
+                        console.error("Results error:", resp.status, t);
+                        tableBody.innerHTML = `<div style="padding:12px;">Failed to load results</div>`;
+                        return;
+                    }
+
+                    const data = await resp.json();
+                    const results = data.results || [];
+
+                    tableBody.innerHTML = results.map(r => rowHtml(r)).join("");
+                } catch (e) {
+                    console.error("Failed to load results:", e);
+                    tableBody.innerHTML = `<div style="padding:12px;">Failed to load results</div>`;
+                }
+            }
+
+            function gradeToLetter(n) {
+                if (n === null || n === undefined || n === "") return "";
+                const x = Number(n);
+                if (Number.isNaN(x)) return "";
+                if (x >= 75) return "A";
+                if (x >= 65) return "B";
+                if (x >= 55) return "C";
+                return "D";
+            }
+
+            function rowHtml(r) {
+                const letter = gradeToLetter(r.final_grade);
+                const status = r.status || "DRAFT";
+                const statusClass = status === "PUBLISHED" ? "status-approved" : "status-pending";
+
+                return `
+        <div class="table-row"
+             data-portfolio-id="${escapeHtml(r.portfolio_id)}"
+             data-status="${escapeHtml(status)}"
+             data-grade="${escapeHtml(letter)}">
+          <div class="table-cell">${escapeHtml(r.student_no || "")}</div>
+          <div class="table-cell">${escapeHtml((r.portfolio_link || "").split("/").pop() || "")}</div>
+          <div class="table-cell ${statusClass}">${escapeHtml(status)}</div>
+          <div class="table-cell">${escapeHtml(letter)}</div>
+          <div class="table-cell">
+            <span class="view-icon" role="button" tabindex="0" title="View Report">📄</span>
+          </div>
+        </div>
+      `;
+            }
+
+            function filterTable() {
+                const statusFilter = (filterStatus.value || "").trim();
+                const gradeFilter = (filterGrade.value || "").trim();
+                const searchText = (searchStudent.value || "").toLowerCase();
+
+                const rows = document.querySelectorAll(".table-row");
+                rows.forEach(row => {
+                    // Skip any empty filler rows
+                    if (row.classList.contains("empty-row")) return;
+
+                    const studentNo = (row.children[0]?.textContent || "").toLowerCase();
+                    const rowStatus = row.dataset.status || "";
+                    const rowGrade = row.dataset.grade || "";
+
+                    let show = true;
+                    if (statusFilter && rowStatus !== statusFilter) show = false;
+                    if (gradeFilter && rowGrade !== gradeFilter) show = false;
+                    if (searchText && !studentNo.includes(searchText)) show = false;
+
+                    row.style.display = show ? "grid" : "none";
+                });
+            }
+
+            function escapeHtml(s) {
+                return String(s ?? "")
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
         });
 
-        function filterTable() {
-            const batchFilter = document.getElementById("selectBatch").value;               // "2024"
-            const statusFilter = document.getElementById("filterStatus").value.toLowerCase(); // "approved"
-            const gradeFilter = document.getElementById("filterGrade").value;               // "A"
-            const assignmentFilter = document.getElementById("filterAssignment").value;     // "assignment1"
-            const searchText = document.getElementById("searchStudent").value.toLowerCase();
-
-            const rows = document.querySelectorAll(".table-row:not(.empty-row)");
-
-            rows.forEach(row => {
-                const cells = row.querySelectorAll(".table-cell");
-
-                const studentNo = (cells[0]?.textContent || "").toLowerCase();
-                const status = (cells[2]?.textContent || "").toLowerCase();
-                const grade = (cells[3]?.textContent || "").trim();
-
-                const rowBatch = row.dataset.batch || "";
-                const rowAssignment = row.dataset.assignment || "";
-
-                let show = true;
-
-                if (batchFilter && rowBatch !== batchFilter) show = false;
-                if (statusFilter && !status.includes(statusFilter)) show = false;
-                if (gradeFilter && grade !== gradeFilter) show = false;
-                if (assignmentFilter && rowAssignment !== assignmentFilter) show = false;
-                if (searchText && !studentNo.includes(searchText)) show = false;
-
-                row.style.display = show ? "grid" : "none";
-            });
-        }
-
-        // View report action
+        // View report click (works for dynamically created rows too)
         document.addEventListener("click", (e) => {
             const icon = e.target.closest(".view-icon");
             if (!icon) return;
@@ -204,15 +316,13 @@
             const row = icon.closest(".table-row");
             const portfolioId = row?.dataset?.portfolioId;
 
-            // Replace with your real navigation
             if (portfolioId) {
-                // Example: window.location.href = `view_report.html?portfolio_id=${portfolioId}`;
-                alert("Open report for portfolio_id = " + portfolioId);
-            } else {
-                alert("No portfolio_id found on this row.");
+                window.location.href = `view_report.html?portfolio_id=${encodeURIComponent(portfolioId)}`;
             }
         });
     </script>
+
+
 </body>
 
 </html>

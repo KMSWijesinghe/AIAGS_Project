@@ -93,37 +93,88 @@ def load_model():
 
 
 def extract_text(file_path: str) -> str:
-    # Support PDF and plain text. For docx you can add python-docx later if needed.
+    """
+    Extract text from supported file types:
+    - PDF (.pdf)
+    - Word (.docx)
+    - Plain text (fallback)
+    """
+
+    if not file_path or not os.path.exists(file_path):
+        return ""
+
     ext = os.path.splitext(file_path)[1].lower()
+
+    # ================= PDF =================
     if ext == ".pdf":
-        # Try pdfplumber first, then PyMuPDF
+        # Try pdfplumber first
         try:
             import pdfplumber
             text_parts = []
+
             with pdfplumber.open(file_path) as pdf:
                 for page in pdf.pages:
-                    t = page.extract_text() or ""
-                    if t:
-                        text_parts.append(t)
+                    page_text = page.extract_text() or ""
+                    if page_text.strip():
+                        text_parts.append(page_text)
+
             text = "\n".join(text_parts)
             if text.strip():
                 return text
-        except Exception:
-            pass
+
+        except Exception as e:
+            print("pdfplumber failed:", e)
+
+        # Fallback: PyMuPDF
         try:
             import fitz  # PyMuPDF
             doc = fitz.open(file_path)
-            text = "\n".join([page.get_text("text") for page in doc])
-            return text
-        except Exception:
+            text_parts = []
+
+            for page in doc:
+                page_text = page.get_text("text") or ""
+                if page_text.strip():
+                    text_parts.append(page_text)
+
+            return "\n".join(text_parts)
+
+        except Exception as e:
+            print("PyMuPDF failed:", e)
             return ""
 
-    # fallback: read as text
+    # ================= DOCX =================
+    if ext == ".docx":
+        try:
+            from docx import Document
+
+            doc = Document(file_path)
+            text_parts = []
+
+            for paragraph in doc.paragraphs:
+                if paragraph.text and paragraph.text.strip():
+                    text_parts.append(paragraph.text.strip())
+
+            # Also extract text from tables (important for portfolios)
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        if cell.text and cell.text.strip():
+                            text_parts.append(cell.text.strip())
+
+            return "\n".join(text_parts)
+
+        except Exception as e:
+            print("DOCX extraction failed:", e)
+            return ""
+
+    # ================= TXT / FALLBACK =================
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             return f.read()
-    except Exception:
+    except Exception as e:
+        print("Fallback text read failed:", e)
         return ""
+
 
 
 def _safe_parse_rubric(rubric_text: Optional[str]) -> Dict[str, Any]:
@@ -272,7 +323,7 @@ def grade(req: GradeRequest):
     4) Sum predicted weighted scores to compute overall total AI grade.
     """
 
-    model = load_model()
+    model = None
     portfolio_text = extract_text(req.file_path)
 
     # Parse rubric from DB (preferred). If DB stores plain text, fall back to default rubric.
