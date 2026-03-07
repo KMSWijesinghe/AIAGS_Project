@@ -38,6 +38,10 @@ function signToken(user, extra = {}) {
   );
 }
 
+function getHomeRoute(role) {
+  return role === "student" ? "/home_student.html" : "/add_assignments.html";
+}
+
 /**
  * POST /api/auth/login
  * Supports:
@@ -180,6 +184,7 @@ export async function login(req, res) {
           stdNo,
           adSource: authSource,
         },
+        homeRoute: getHomeRoute(user.role),
       });
     }
 
@@ -212,6 +217,7 @@ export async function login(req, res) {
         email: user.email,
         display_name: user.display_name,
       },
+      homeRoute: getHomeRoute(user.role),
     });
   } catch (e) {
     if (e?.issues) {
@@ -277,4 +283,8 @@ export async function createUser(req, res) {
 
 export async function me(req, res) {
   return res.json({ user: req.user });
+}
+
+export async function studentHomeAccess(req, res) {
+  return res.json({ ok: true, user: req.user });
 }

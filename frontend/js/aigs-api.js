@@ -43,6 +43,7 @@ export const api = {
         body: JSON.stringify({ email, password }),
       }),
     me: () => request("/api/auth/me"),
+    studentHome: () => request("/api/auth/student-home"),
   },
 
   courses: {

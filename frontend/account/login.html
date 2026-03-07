@@ -508,12 +508,7 @@
 
                 // backend returns { token, user }
                 localStorage.setItem("aigs_token", data.token);
-
-                if (data.user?.role === "student") {
-                    window.location.href = "../home_student.html";
-                } else {
-                    window.location.href = "../add_assignments.html";
-                }
+                window.location.href = `..${data.homeRoute || "/add_assignments.html"}`;
             } catch (err) {
                 console.error(err);
                 alert(err.message || "Login failed");

@@ -256,20 +256,57 @@
     </div><!-- container -->
 
     <script>
-        // Load the shared sidebar
-        fetch("sidebar.html")
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById("sidebar-container").innerHTML = html;
+        async function enforceStudentAccess() {
+            const token = localStorage.getItem("aigs_token");
+            if (!token) {
+                window.location.href = "account/login.html";
+                return false;
+            }
 
-                // highlight the menu item in sidebar
-                const currentLink =
-                    document.querySelector('.nav-link[data-page="studenthome"]') ||
-                    document.querySelector('.nav-button[data-page="studenthome"]');
+            try {
+                const res = await fetch("/api/auth/student-home", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
 
-                if (currentLink) currentLink.classList.add("active");
-            })
-            .catch(err => console.error("Sidebar load error: ", err));
+                if (res.ok) return true;
+
+                if (res.status === 401) {
+                    localStorage.removeItem("aigs_token");
+                    window.location.href = "account/login.html";
+                    return false;
+                }
+
+                window.location.href = "add_assignments.html";
+                return false;
+            } catch (err) {
+                console.error("Role check failed:", err);
+                window.location.href = "account/login.html";
+                return false;
+            }
+        }
+
+        function loadStudentSidebar() {
+            fetch("sidebar.html")
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById("sidebar-container").innerHTML = html;
+
+                    document.querySelectorAll(".nav-button").forEach(link => {
+                        if (link.dataset.page !== "studenthome") link.remove();
+                    });
+
+                    const currentLink =
+                        document.querySelector('.nav-link[data-page="studenthome"]') ||
+                        document.querySelector('.nav-button[data-page="studenthome"]');
+
+                    if (currentLink) currentLink.classList.add("active");
+                })
+                .catch(err => console.error("Sidebar load error: ", err));
+        }
+
+        enforceStudentAccess().then((allowed) => {
+            if (allowed) loadStudentSidebar();
+        });
 
         // Filter table based on dropdown selections
         function filterTable() {
