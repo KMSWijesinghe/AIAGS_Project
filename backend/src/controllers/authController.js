@@ -70,44 +70,68 @@ export async function login(req, res) {
     // 1) University auth path
     // --------------------------------------------
     if (isUniversityLogin) {
-      const payload = {
-        req_type: "log",
-        netId,
-        password,
-      };
+      const adStudentBaseDn =
+        process.env.AD_STUDENT_BASE_DN ||
+        "OU=Medicine,OU=Students,DC=kln,DC=ac,DC=lk";
+      const adStaffBaseDn =
+        process.env.AD_STAFF_BASE_DN ||
+        "OU=Medicine,OU=Staff,DC=kln,DC=ac,DC=lk";
+      const adBaseDns = [adStudentBaseDn, adStaffBaseDn];
 
-      let uniData;
-      try {
-        const response = await fetch(
-          "https://systems.medicine.kln.ac.lk/logsc/login.php",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
+      let uniData = null;
+      let authSource = "student";
+      let lastMessage = "Invalid credentials";
 
-        const text = await response.text();
+      for (const baseDn of adBaseDns) {
+        const payload = {
+          req_type: "log",
+          netId,
+          password,
+          baseDn,
+          searchBase: baseDn,
+          adBaseDn: baseDn,
+        };
+
         try {
-          uniData = text ? JSON.parse(text) : {};
-        } catch {
-          return res.status(502).json({
-            error: "University auth returned invalid response",
-            raw: text,
-          });
+          const response = await fetch(
+            "https://systems.medicine.kln.ac.lk/logsc/login.php",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          );
+
+          const text = await response.text();
+          let parsed;
+          try {
+            parsed = text ? JSON.parse(text) : {};
+          } catch {
+            return res.status(502).json({
+              error: "University auth returned invalid response",
+              raw: text,
+            });
+          }
+
+          if (parsed?.loginStatus === true) {
+            uniData = parsed;
+            authSource = baseDn === adStaffBaseDn ? "staff" : "student";
+            break;
+          }
+
+          if (parsed?.message) lastMessage = parsed.message;
+        } catch (e) {
+          console.error("University auth fetch error:", e);
+          return res.status(502).json({ error: "University auth system error" });
         }
-      } catch (e) {
-        console.error("University auth fetch error:", e);
-        return res.status(502).json({ error: "University auth system error" });
       }
 
-      if (uniData?.loginStatus !== true) {
-        return res
-          .status(401)
-          .json({ error: uniData?.message || "Invalid credentials" });
+      if (!uniData) {
+        return res.status(401).json({ error: lastMessage });
       }
 
       const stdNo = uniData?.stdNo || null;
+      const userRole = authSource === "staff" ? "teacher" : "student";
 
       // 2) Find or create local user (use fullEmail!)
       const existing = await query(
@@ -121,14 +145,21 @@ export async function login(req, res) {
 
         const ins = await query(
           "INSERT INTO users (role, email, password_hash, display_name) VALUES (?,?,?,?)",
-          ["student", fullEmail, dummyHash, null]
+          [userRole, fullEmail, dummyHash, null]
         );
         const userId = ins.insertId;
 
-        await query("INSERT INTO students (student_no, user_id) VALUES (?,?)", [
-          stdNo || `STD-${userId}`,
-          userId,
-        ]);
+        if (userRole === "student") {
+          await query("INSERT INTO students (student_no, user_id) VALUES (?,?)", [
+            stdNo || `STD-${userId}`,
+            userId,
+          ]);
+        } else {
+          await query(
+            "INSERT INTO teachers (teacher_id, user_id, teacher_mail, department) VALUES (?,?,?,?)",
+            [netId, userId, fullEmail, null]
+          );
+        }
 
         const after = await query(
           "SELECT user_id, role, email, display_name FROM users WHERE user_id=?",
@@ -137,7 +168,7 @@ export async function login(req, res) {
         user = after[0];
       }
 
-      const token = signToken(user, { stdNo });
+      const token = signToken(user, { stdNo, adSource: authSource });
 
       return res.json({
         token,
@@ -147,6 +178,7 @@ export async function login(req, res) {
           email: user.email, // this will be fullEmail
           display_name: user.display_name,
           stdNo,
+          adSource: authSource,
         },
       });
     }
