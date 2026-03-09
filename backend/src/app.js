@@ -10,6 +10,7 @@ import rubricRoutes from './routes/rubrics.js';
 import portfolioRoutes from './routes/portfolios.js';
 import gradingRoutes from './routes/grading.js';
 import metaRoutes from "./routes/metaRoutes.js";
+import studentRoutes from "./routes/students.js";
 
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/rubrics', rubricRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/grading', gradingRoutes);
+app.use('/api/student', studentRoutes);
 
 // SPA-ish fallback for direct navigation to html pages
 app.get('*', (req, res) => {

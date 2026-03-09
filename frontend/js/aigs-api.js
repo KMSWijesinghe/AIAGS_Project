@@ -125,4 +125,8 @@ export const api = {
     publishAssignment: (assignmentId) =>
       request(`/api/grading/assignment/${assignmentId}/publish`, { method: "POST" }),
   },
+
+  student: {
+    dashboard: () => request("/api/student/dashboard"),
+  },
 };

@@ -89,6 +89,11 @@
             color: white;
         }
 
+        .status-overdue {
+            background-color: #e74c3c;
+            color: white;
+        }
+
         .deadline-text {
             color: #555;
         }
@@ -194,6 +199,7 @@
                             <option value="">All Status</option>
                             <option value="Finished">Finished</option>
                             <option value="Pending">Pending</option>
+                            <option value="Overdue">Overdue</option>
                         </select>
                     </div>
                 </div>
@@ -208,30 +214,8 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr data-department="Medicine" data-assignment="Assignment 1" data-status="Pending">
-                            <td>Assignment 1 - Clinical Case Study</td>
-                            <td><span class="status-badge status-pending">Pending</span></td>
-                            <td class="deadline-text">February 15, 2026</td>
-                        </tr>
-                        <tr data-department="Surgery" data-assignment="Assignment 2" data-status="Finished">
-                            <td>Assignment 2 - Surgical Procedures Report</td>
-                            <td><span class="status-badge status-finished">Finished</span></td>
-                            <td class="deadline-text">February 10, 2026</td>
-                        </tr>
-                        <tr data-department="Pediatrics" data-assignment="Assignment 3" data-status="Pending">
-                            <td>Assignment 3 - Pediatric Assessment</td>
-                            <td><span class="status-badge status-pending">Pending</span></td>
-                            <td class="deadline-text">February 20, 2026</td>
-                        </tr>
-                        <tr data-department="Medicine" data-assignment="Assignment 4" data-status="Finished">
-                            <td>Assignment 4 - Research Paper</td>
-                            <td><span class="status-badge status-finished">Finished</span></td>
-                            <td class="deadline-text">February 5, 2026</td>
-                        </tr>
-                        <tr data-department="Psychiatry" data-assignment="Assignment 1" data-status="Pending">
-                            <td>Assignment 1 - Mental Health Evaluation</td>
-                            <td><span class="status-badge status-pending">Pending</span></td>
-                            <td class="deadline-text">February 25, 2026</td>
+                        <tr>
+                            <td colspan="3">Loading assignments...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -256,6 +240,8 @@
     </div><!-- container -->
 
     <script>
+        let dashboardAssignments = [];
+
         async function enforceStudentAccess() {
             const token = localStorage.getItem("aigs_token");
             if (!token) {
@@ -285,7 +271,7 @@
             }
         }
 
-        function loadStudentSidebar() {
+        function loadStudentSidebar(student) {
             fetch("sidebar.html")
                 .then(res => res.text())
                 .then(html => {
@@ -294,6 +280,11 @@
                     document.querySelectorAll(".nav-button").forEach(link => {
                         if (link.dataset.page !== "studenthome") link.remove();
                     });
+
+                    const welcome = document.querySelector(".welcome");
+                    if (welcome && student?.full_name) {
+                        welcome.textContent = `Welcome ${student.full_name}`;
+                    }
 
                     const currentLink =
                         document.querySelector('.nav-link[data-page="studenthome"]') ||
@@ -304,52 +295,101 @@
                 .catch(err => console.error("Sidebar load error: ", err));
         }
 
-        enforceStudentAccess().then((allowed) => {
-            if (allowed) loadStudentSidebar();
-        });
-
-        // Filter table based on dropdown selections
-        function filterTable() {
-            const departmentFilter = document.getElementById('departmentFilter').value;
-            const assignmentFilter = document.getElementById('assignmentFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            
-            const rows = document.querySelectorAll('#tableBody tr');
-            
-            rows.forEach(row => {
-                const department = row.getAttribute('data-department');
-                const assignment = row.getAttribute('data-assignment');
-                const status = row.getAttribute('data-status');
-                
-                let showRow = true;
-                
-                if (departmentFilter && department !== departmentFilter) {
-                    showRow = false;
-                }
-                
-                if (assignmentFilter && assignment !== assignmentFilter) {
-                    showRow = false;
-                }
-                
-                if (statusFilter && status !== statusFilter) {
-                    showRow = false;
-                }
-                
-                row.style.display = showRow ? '' : 'none';
-            });
+        function fmtDate(isoDate) {
+            if (!isoDate) return "N/A";
+            const d = new Date(isoDate);
+            if (Number.isNaN(d.getTime())) return isoDate;
+            return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
         }
 
-        // Navigation functions
+        function renderFilters(assignments) {
+            const deptSelect = document.getElementById("departmentFilter");
+            const assignmentSelect = document.getElementById("assignmentFilter");
+
+            const depts = [...new Set(assignments.map(a => a.department).filter(Boolean))].sort();
+            const assignmentNames = [...new Set(assignments.map(a => a.assignment_name).filter(Boolean))].sort();
+
+            deptSelect.innerHTML = `<option value="">All Departments</option>${depts.map(v => `<option value="${v}">${v}</option>`).join("")}`;
+            assignmentSelect.innerHTML = `<option value="">All Assignments</option>${assignmentNames.map(v => `<option value="${v}">${v}</option>`).join("")}`;
+        }
+
+        function renderTable(assignments) {
+            const tbody = document.getElementById("tableBody");
+
+            if (!assignments.length) {
+                tbody.innerHTML = `<tr><td colspan="3">No assignments found for your profile.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = assignments.map((a) => {
+                const statusClass =
+                    a.status === "SUBMITTED"
+                        ? "status-finished"
+                        : (a.status === "OVERDUE" ? "status-overdue" : "status-pending");
+                const statusLabel = a.status === "SUBMITTED" ? "Submitted" : (a.status === "OVERDUE" ? "Overdue" : "Pending");
+                return `
+                    <tr data-department="${a.department || ""}" data-assignment="${a.assignment_name || ""}" data-status="${statusLabel}">
+                        <td>${a.assignment_name || "-"}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td class="deadline-text">${fmtDate(a.deadline_date)}</td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        function filterTable() {
+            const departmentFilter = document.getElementById("departmentFilter").value;
+            const assignmentFilter = document.getElementById("assignmentFilter").value;
+            const statusFilter = document.getElementById("statusFilter").value;
+
+            const filtered = dashboardAssignments.filter((a) => {
+                const statusLabel = a.status === "SUBMITTED" ? "Finished" : (a.status === "OVERDUE" ? "Overdue" : "Pending");
+                if (departmentFilter && (a.department || "") !== departmentFilter) return false;
+                if (assignmentFilter && (a.assignment_name || "") !== assignmentFilter) return false;
+                if (statusFilter && statusLabel !== statusFilter) return false;
+                return true;
+            });
+
+            renderTable(filtered);
+        }
+
+        async function loadStudentDashboard() {
+            const token = localStorage.getItem("aigs_token");
+            const res = await fetch("/api/student/dashboard", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to load student dashboard");
+            }
+
+            const data = await res.json();
+            dashboardAssignments = data.assignments || [];
+            renderFilters(dashboardAssignments);
+            renderTable(dashboardAssignments);
+            loadStudentSidebar(data.student || null);
+        }
+
+        enforceStudentAccess().then(async (allowed) => {
+            if (!allowed) return;
+            try {
+                await loadStudentDashboard();
+            } catch (err) {
+                console.error("Dashboard load error:", err);
+                alert("Unable to load student dashboard data.");
+            }
+        });
+
         function navigateToUpload() {
-            window.location.href = 'Upload Assignment.html';
+            window.location.href = "Upload Assignment.html";
         }
 
         function navigateToFeedback() {
-            window.location.href = 'get_feedback.html';
+            window.location.href = "get_feedback.html";
         }
 
         function navigateToResults() {
-            window.location.href = 'View result.html';
+            window.location.href = "View result.html";
         }
     </script>
 </body>

@@ -54,21 +54,31 @@ export async function login(req, res) {
     const { email: rawEmailOrNetId, password } = loginSchema.parse(req.body);
 
     const input = rawEmailOrNetId.trim();
+    const inputNoDomainPrefix = input.includes("\\")
+      ? input.split("\\").pop().trim()
+      : input.includes("/")
+        ? input.split("/").pop().trim()
+        : input;
 
     // ✅ netId derived from either "netid" or "netid@domain"
-    const netId = input.includes("@") ? input.split("@")[0].trim() : input;
+    const netId = inputNoDomainPrefix.includes("@")
+      ? inputNoDomainPrefix.split("@")[0].trim()
+      : inputNoDomainPrefix;
 
     // ✅ Create a stable "full email" to store/search in DB for university users
     // Choose your official domain here:
-    const fullEmail = input.includes("@") ? input : `${netId}@kln.ac.lk`;
+    const fullEmail = inputNoDomainPrefix.includes("@")
+      ? inputNoDomainPrefix
+      : `${netId}@kln.ac.lk`;
 
     // ✅ Decide whether to use university auth
     // If user typed just netId -> university auth
     // If user typed @kln.ac.lk or @medicine.kln.ac.lk -> university auth
+    const lowerInput = input.toLowerCase();
     const isUniversityLogin =
       !input.includes("@") ||
-      input.endsWith("@kln.ac.lk") ||
-      input.endsWith("@medicine.kln.ac.lk");
+      lowerInput.endsWith("@kln.ac.lk") ||
+      lowerInput.endsWith(".kln.ac.lk");
 
     // --------------------------------------------
     // 1) University auth path
@@ -85,56 +95,125 @@ export async function login(req, res) {
       let uniData = null;
       let authSource = "student";
       let lastMessage = "Invalid credentials";
+      const authAttempts = [];
+
+      const candidateNetIds = Array.from(
+        new Set(
+          [
+            netId,
+            inputNoDomainPrefix,
+            inputNoDomainPrefix.includes("@")
+              ? inputNoDomainPrefix.split("@")[0].trim()
+              : null,
+            inputNoDomainPrefix.includes("@")
+              ? inputNoDomainPrefix
+              : `${netId}@kln.ac.lk`,
+            `${netId}@medicine.kln.ac.lk`,
+            `kln\\${netId}`,
+            `kln.ac.lk\\${netId}`,
+            `medicine\\${netId}`,
+            `medicine.kln.ac.lk\\${netId}`,
+          ].filter(Boolean)
+        )
+      );
 
       for (const baseDn of adBaseDns) {
-        const payload = {
-          req_type: "log",
-          netId,
-          password,
-          baseDn,
-          searchBase: baseDn,
-          adBaseDn: baseDn,
-        };
+        for (const candidateNetId of candidateNetIds) {
+          const payload = {
+            req_type: "log",
+            netId: candidateNetId,
+            username: candidateNetId,
+            userName: candidateNetId,
+            email: candidateNetId,
+            password,
+            baseDn,
+            searchBase: baseDn,
+            adBaseDn: baseDn,
+          };
 
-        try {
-          const response = await fetch(
-            "https://systems.medicine.kln.ac.lk/logsc/login.php",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            }
-          );
-
-          const text = await response.text();
-          let parsed;
           try {
-            parsed = text ? JSON.parse(text) : {};
-          } catch {
-            return res.status(502).json({
-              error: "University auth returned invalid response",
-              raw: text,
+            const response = await fetch(
+              "https://systems.medicine.kln.ac.lk/logsc/login.php",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              }
+            );
+
+            const text = await response.text();
+            let parsed;
+            try {
+              parsed = text ? JSON.parse(text) : {};
+            } catch {
+              return res.status(502).json({
+                error: "University auth returned invalid response",
+                raw: text,
+              });
+            }
+
+            if (parsed?.loginStatus === true) {
+              authAttempts.push({
+                baseDn,
+                candidateNetId,
+                loginStatus: true,
+                message: parsed?.message || null,
+              });
+              uniData = parsed;
+              authSource = baseDn === adStaffBaseDn ? "staff" : "student";
+              break;
+            }
+
+            authAttempts.push({
+              baseDn,
+              candidateNetId,
+              loginStatus: false,
+              message: parsed?.message || null,
             });
+            if (parsed?.message) lastMessage = parsed.message;
+          } catch (e) {
+            authAttempts.push({
+              baseDn,
+              candidateNetId,
+              loginStatus: false,
+              message: "fetch_error",
+            });
+            console.error("University auth fetch error:", e);
+            return res.status(502).json({ error: "University auth system error" });
           }
-
-          if (parsed?.loginStatus === true) {
-            uniData = parsed;
-            authSource = baseDn === adStaffBaseDn ? "staff" : "student";
-            break;
-          }
-
-          if (parsed?.message) lastMessage = parsed.message;
-        } catch (e) {
-          console.error("University auth fetch error:", e);
-          return res.status(502).json({ error: "University auth system error" });
         }
+
+        if (uniData) break;
       }
 
       if (!uniData) {
-        return res.status(401).json({ error: lastMessage });
+        const debugInfo = {
+          input,
+          normalized: inputNoDomainPrefix,
+          attempts: authAttempts,
+        };
+        console.warn("University auth failed", {
+          input,
+          normalized: inputNoDomainPrefix,
+          attempts: authAttempts,
+        });
+        return res.status(401).json({
+          error: lastMessage,
+          ...(process.env.AUTH_DEBUG === "true" ? { debug: debugInfo } : {}),
+        });
       }
 
-      const stdNo = uniData?.stdNo || null;
+      const stdNo = uniData?.stdNo || uniData?.student_no || uniData?.studentNo || null;
+      const studentFullName =
+        uniData?.full_name ||
+        uniData?.fullName ||
+        uniData?.display_name ||
+        uniData?.displayName ||
+        uniData?.name ||
+        null;
+      const studentBatch = uniData?.batch || uniData?.intake || null;
+      const studentCourse = uniData?.course_name || uniData?.course || null;
+      const studentDepartment = uniData?.department || uniData?.dept || null;
       const userRole = authSource === "staff" ? "teacher" : "student";
 
       // 2) Find or create local user (use fullEmail!)
@@ -154,10 +233,18 @@ export async function login(req, res) {
         const userId = ins.insertId;
 
         if (userRole === "student") {
-          await query("INSERT INTO students (student_no, user_id) VALUES (?,?)", [
-            stdNo || `STD-${userId}`,
-            userId,
-          ]);
+          const resolvedStudentNo = stdNo || `STD-${userId}`;
+          await query(
+            "INSERT INTO students (student_no, user_id, full_name, batch, course_name, department) VALUES (?,?,?,?,?,?)",
+            [
+              resolvedStudentNo,
+              userId,
+              studentFullName,
+              studentBatch,
+              studentCourse,
+              studentDepartment,
+            ]
+          );
         } else {
           await query(
             "INSERT INTO teachers (teacher_id, user_id, teacher_mail, department) VALUES (?,?,?,?)",
@@ -170,6 +257,43 @@ export async function login(req, res) {
           [userId]
         );
         user = after[0];
+      } else if (userRole === "student") {
+        const resolvedStudentNo = stdNo || `STD-${user.user_id}`;
+        const existingStudentByUser = (
+          await query("SELECT student_no FROM students WHERE user_id=? LIMIT 1", [user.user_id])
+        )[0];
+
+        if (!existingStudentByUser) {
+          const existingStudentByNo = (
+            await query("SELECT student_no FROM students WHERE student_no=? LIMIT 1", [resolvedStudentNo])
+          )[0];
+
+          if (existingStudentByNo) {
+            await query("UPDATE students SET user_id=? WHERE student_no=?", [user.user_id, resolvedStudentNo]);
+          } else {
+            await query(
+              "INSERT INTO students (student_no, user_id, full_name, batch, course_name, department) VALUES (?,?,?,?,?,?)",
+              [
+                resolvedStudentNo,
+                user.user_id,
+                studentFullName,
+                studentBatch,
+                studentCourse,
+                studentDepartment,
+              ]
+            );
+          }
+        }
+
+        await query(
+          `UPDATE students
+           SET full_name = COALESCE(?, full_name),
+               batch = COALESCE(?, batch),
+               course_name = COALESCE(?, course_name),
+               department = COALESCE(?, department)
+           WHERE user_id = ?`,
+          [studentFullName, studentBatch, studentCourse, studentDepartment, user.user_id]
+        );
       }
 
       const token = signToken(user, { stdNo, adSource: authSource });
@@ -288,3 +412,4 @@ export async function me(req, res) {
 export async function studentHomeAccess(req, res) {
   return res.json({ ok: true, user: req.user });
 }
+
